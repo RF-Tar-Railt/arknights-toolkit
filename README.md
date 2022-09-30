@@ -52,4 +52,4 @@ asyncio.run(main())
 
 抽卡结果:
 
-<img src="./example_sim.png" alt="left" width="640" height="360">
+<img src="./example_sim.png" align="left" width="640" height="360" alt="抽卡结果">

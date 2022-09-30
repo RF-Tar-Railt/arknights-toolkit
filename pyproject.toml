@@ -31,4 +31,4 @@ dev = [
 ]
 
 [tool.pdm.build]
-includes = ["arknights_kit"]
+includes = ["arknights_toolkit"]
