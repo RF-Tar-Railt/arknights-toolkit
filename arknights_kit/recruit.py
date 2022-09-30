@@ -82,6 +82,13 @@ base_str = "QAAAAAAAAAAAAAAAAAAAAAAA"
 
 
 def recruitment(tags: List[str], simple: bool = True):
+    """
+    生成 prts的公招链接
+
+    :param tags: 公招标签
+    :param simple: 是否极简模式
+    :return: 网页链接
+    """
     add_str = [0, 0, 0, 2, 0, 0, 0]
     for val in tags:
         if val in professor_1:

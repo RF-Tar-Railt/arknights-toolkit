@@ -64,13 +64,19 @@ operators = {
 logger.debug("operators image loaded.")
 
 
-async def simulate_ten_generate(ops: List[Operator]):
+async def simulate_image(ops: List[Operator]):
+    """
+    依据抽卡结果生成模拟十连图片
+
+    :param ops: 抽卡结果
+    :return: 图片的bytes
+    """
     base = 20
     offset = 124
     l_offset = 14
     back_img = Image.open(resource_path / "back_image.png")
     async with httpx.AsyncClient() as async_httpx:
-        for op in ops:
+        for op in ops[:10]:
             name = op.name
             rarity = op.rarity - 1
             try:

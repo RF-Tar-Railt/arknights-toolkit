@@ -2,11 +2,30 @@ import json
 from datetime import datetime
 from pathlib import Path
 from random import Random
-from typing import Dict, List, Optional, TypedDict
+from typing import List, Optional, TypedDict
+
+
+class Tags(TypedDict):
+    static: str
+    optional: List[str]
+
+
+class SubCareer(TypedDict):
+    name: str
+    block: int
+    attack_speed: str
+    cost_basic: int
+    talent: str
+    tags: Tags
+
+
+class Career(TypedDict):
+    name: str
+    info: List[SubCareer]
 
 
 class Information(TypedDict):
-    career: List[Dict]
+    career: List[Career]
     organize: List[str]
     homeland: List[str]
     race: List[str]
@@ -14,9 +33,13 @@ class Information(TypedDict):
 
 
 class RandomOperator:
+    """依据名称随机生成干员"""
     rand_operator_dict: Information
 
     def __init__(self, path: Optional[str] = None):
+        """
+        :param path: 模板文件路径
+        """
         path = (
             Path(path)
             if path
@@ -26,6 +49,9 @@ class RandomOperator:
             self.rand_operator_dict = json.load(f)
 
     def generate(self, name: str) -> str:
+        """
+        依据名称随机生成干员
+        """
         rand = Random()
         count = sum(ord(char) for char in name)
         now = datetime.now()
@@ -39,9 +65,9 @@ class RandomOperator:
         career_detail = career_info_dict["name"]
         level = rand.randint(3, 6)
         cost = (
-            career_info_dict["cost_basic"]
-            + level
-            - (2 if rand.randint(0, 4) >= 2 else rand.randint(0, 1))
+                career_info_dict["cost_basic"]
+                + level
+                - (2 if rand.randint(0, 4) >= 2 else rand.randint(0, 1))
         )
         attack_speed = career_info_dict["attack_speed"]
         block = career_info_dict["block"]

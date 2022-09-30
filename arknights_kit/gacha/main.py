@@ -15,6 +15,7 @@ from .update import update
 
 
 class ArknightsGacha:
+    """抽卡模拟器"""
     five_per: int
     four_per: int
     three_per: int
@@ -28,6 +29,9 @@ class ArknightsGacha:
     }
 
     def __init__(self, file: Optional[Union[str, Path]] = None):
+        """
+        :param file: 卡池信息文件
+        """
         self.five_per, self.four_per, self.three_per = 8, 50, 40
         if not file:
             file = Path(__file__).parent.parent / "resource" / "default_gacha.json"
@@ -40,6 +44,7 @@ class ArknightsGacha:
             self.data = json.load(f_obj)
 
     async def update(self):
+        """更新当前卡池"""
         resp = await update()
         if not resp:
             return
@@ -79,6 +84,13 @@ class ArknightsGacha:
         return resp
 
     def gacha(self, user: GachaUser, count: int = 1) -> List[List[Operator]]:
+        """
+        模拟抽卡，返回生成的干员信息
+
+        :param user: 抽卡用户，用来继承抽卡概率
+        :param count: 抽卡数量
+        :return: 干员信息
+        """
         gacha_ranks: List[List[Operator]] = []
         cache = []
         for i in range(1, count + 1):
@@ -110,6 +122,12 @@ class ArknightsGacha:
         return gacha_ranks
 
     def generate_operator(self, rank: str) -> Operator:
+        """
+        抽取单个干员
+
+        :param rank: 干员等级，从 六、五、四、三中选取
+        :return: 生成的干员信息
+        """
         card_list = self.data["operators"][rank].copy()
         if rank == "六":
             if (six_per := self.data["six_per"]) >= 1.0:
@@ -151,6 +169,15 @@ class ArknightsGacha:
         count: int = 1,
         relief: bool = False,
     ) -> bytes:
+        """
+        将抽卡结果转为图片
+
+        :param user: 抽卡用户
+        :param result: 本次抽卡结果
+        :param count: 抽卡数量
+        :param relief: 是否需要浮雕效果
+        :return: 生成的图片bytes
+        """
         tile = 20
         width_base = 720
         color_base = 0x40

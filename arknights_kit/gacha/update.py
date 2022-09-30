@@ -12,6 +12,11 @@ from .model import UpdateChar, UpdateResponse
 
 
 async def update():
+    """
+    从方舟官网处获取卡池更新信息
+
+    :return: 更新结果
+    """
     async with httpx.AsyncClient() as async_httpx:
         result = (await async_httpx.get("https://ak.hypergryph.com/news.html")).text
         if not result:

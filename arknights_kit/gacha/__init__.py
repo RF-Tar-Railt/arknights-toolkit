@@ -1,3 +1,3 @@
-from .sim import simulate_ten_generate
+from .simulate import simulate_image
 from .main import ArknightsGacha
 from .model import GachaUser
