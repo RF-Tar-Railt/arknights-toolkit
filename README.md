@@ -1,12 +1,12 @@
 <div align="center">
 
-# Arknights Kit
+# Arknights-Toolkit
 
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort/)
-[![License](https://img.shields.io/github/license/RF-Tar-Railt/arknights-kit)](https://github.com/RF-Tar-Railt/arknights-kit/blob/master/LICENSE)
+[![License](https://img.shields.io/github/license/RF-Tar-Railt/arknights-toolkit)](https://github.com/RF-Tar-Railt/arknights-toolkit/blob/master/LICENSE)
 [![pdm-managed](https://img.shields.io/badge/pdm-managed-blueviolet)](https://pdm.fming.dev)
-[![PyPI](https://img.shields.io/pypi/v/arknights-kit)](https://img.shields.io/pypi/v/arknights-kit)
+[![PyPI](https://img.shields.io/pypi/v/arknights-toolkit)](https://img.shields.io/pypi/v/arknights-toolkit)
 
 </div>
 
@@ -19,20 +19,22 @@
 - 随机干员生成
 - 公招链接生成
 
+**欢迎 PR**
+
 ## 安装
 
 ```shell
-pip install arknights-kit
+pip install arknights-toolkit
 ```
 
 ```shell
-pdm add arknights-kit
+pdm add arknights-toolkit
 ```
 
 ## 示例
 
 ```python
-from arknights_kit import ArknightsGacha, GachaUser, simulate_image
+from arknights_toolkit import ArknightsGacha, GachaUser, simulate_image
 from pathlib import Path
 import asyncio
 
@@ -50,4 +52,4 @@ asyncio.run(main())
 
 抽卡结果:
 
-<img src="./example_sim.png" align="left">
+<img src="./example_sim.png" alt="left" width="640" height="360">
