@@ -32,7 +32,7 @@ pdm add graiax-arknights-kit
 ## 示例
 
 ```python
-from graiax.arkkit import ArknightsGacha, GachaUser, simulate_ten_generate
+from graiax.arknights_kit import ArknightsGacha, GachaUser, simulate_ten_generate
 from pathlib import Path
 import asyncio
 

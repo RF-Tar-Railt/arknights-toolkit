@@ -1,4 +1,4 @@
-from graiax.arkkit import ArknightsGacha, GachaUser, simulate_ten_generate
+from graiax.arknights_kit import ArknightsGacha, GachaUser, simulate_ten_generate
 from io import BytesIO
 from PIL import Image
 import asyncio

@@ -40,6 +40,13 @@ class ArknightsGacha:
             self.data = json.load(f_obj)
 
     async def update(self):
+        resp = await update()
+        if not resp:
+            return
+        if resp.title == self.data["name"]:
+            return
+        logger.debug(f"成功获取 当前up信息; 当前up池: {resp.title}")
+
         if self.data["name"] != "常驻标准寻访" and self.data["six_per"] < 1:
             self.data["operators"]["六"] += self.data["up_six_list"]
             self.data["operators"]["五"] += self.data["up_five_list"]
@@ -49,12 +56,6 @@ class ArknightsGacha:
         self.data["up_four_list"].clear()
         self.data["up_limit"].clear()
         self.data["up_alert_limit"].clear()
-        resp = await update()
-        if not resp:
-            return
-        if resp.title == self.data["name"]:
-            return
-        logger.debug(f"成功获取 当前up信息; 当前up池: {resp.title}")
         self.data["name"] = resp.title
         for char in resp.six_chars:
             if char.limit:
