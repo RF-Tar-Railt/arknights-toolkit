@@ -1,6 +1,6 @@
 [project]
 name = "arknights-toolkit"
-version = "0.1.0"
+version = "0.1.1"
 description = "Arknights-related Toolkit"
 authors = [
     {name = "RF-Tar-Railt", email = "rf_tar_railt@qq.com"},
@@ -32,3 +32,8 @@ dev = [
 
 [tool.pdm.build]
 includes = ["arknights_toolkit"]
+excludes = [
+    "arknights_toolkit/resource/ops_initialized",
+    "arknights_toolkit/resource/careers.json",
+    "arknights_toolkit/resource/operators/*"
+]

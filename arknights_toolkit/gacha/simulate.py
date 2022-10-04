@@ -1,4 +1,5 @@
 import json
+import random
 import re
 from io import BytesIO
 from pathlib import Path
@@ -56,6 +57,11 @@ stars = {
     2: Image.open(resource_path / "稀有度_白_2.png"),
 }
 logger.debug("stars image loaded.")
+
+if not (resource_path / "ops_initialized").exists():
+    logger.critical("operator resources has not initialized yet")
+    exit()
+
 with (resource_path / "careers.json").open("r", encoding="utf-8") as f:
     careers = json.load(f)
 operators = {
@@ -80,7 +86,7 @@ async def simulate_image(ops: List[Operator]):
             name = op.name
             rarity = op.rarity - 1
             try:
-                if name in operators:
+                if name in operators and name in careers:
                     avatar: Image.Image = operators[name]
                     logo: Image.Image = characters[careers[name]].resize(
                         (96, 96), Image.Resampling.LANCZOS
@@ -99,6 +105,7 @@ async def simulate_image(ops: List[Operator]):
                         )
                     ).crop((20, 0, offset + 20, 360))
                     with (resource_path / "operators" / f"{name}.png").open("wb+") as _f:
+                        operators[name] = avatar
                         avatar.save(
                             _f, format="PNG", quality=100, subsampling=2, qtables="web_high"
                         )
@@ -118,7 +125,7 @@ async def simulate_image(ops: List[Operator]):
                 resp = await async_httpx.get("https://prts.wiki/w/文件:半身像_无_1.png")
                 root = etree.HTML(resp.text)
                 sub = root.xpath('//img[@alt="文件:半身像 无 1.png"]')[0]
-                logo: Image.Image = characters["近卫"].resize(
+                logo: Image.Image = characters[random.choice(list(characters))].resize(
                     (96, 96), Image.Resampling.LANCZOS
                 )
                 avatar: Image.Image = Image.open(
@@ -129,7 +136,7 @@ async def simulate_image(ops: List[Operator]):
                             )
                         ).read()
                     )
-                ).crop((20, 0, offset + 20, 360))
+                ).resize((offset, 360), Image.Resampling.LANCZOS)
 
             s_size = stars[rarity].size
             star = stars[rarity].resize(

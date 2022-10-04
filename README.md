@@ -34,7 +34,7 @@ pdm add arknights-toolkit
 ## 示例
 
 ```python
-from arknights_toolkit import ArknightsGacha, GachaUser, simulate_image
+from arknights_toolkit.gacha import ArknightsGacha, GachaUser, simulate_image
 from pathlib import Path
 import asyncio
 
@@ -52,4 +52,4 @@ asyncio.run(main())
 
 抽卡结果:
 
-<img src="./example_sim.png" align="left" width="640" height="360" alt="抽卡结果">
+<img src="https://github.com/RF-Tar-Railt/arknights-toolkit/blob/master/example_sim.png" align="left" width="640" height="360" alt="抽卡结果">

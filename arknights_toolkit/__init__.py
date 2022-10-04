@@ -1,3 +1,3 @@
-from .gacha import ArknightsGacha, GachaUser, simulate_image
+from .gacha import ArknightsGacha, GachaUser
 from .random_operator import RandomOperator
 from .recruit import recruitment

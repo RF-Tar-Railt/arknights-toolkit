@@ -12,6 +12,7 @@ from PIL import Image, ImageDraw, ImageFont
 from ..util import random_pick_big
 from .model import GachaData, GachaUser, Operator
 from .update import update
+from .download import download
 
 
 class ArknightsGacha:
@@ -43,6 +44,13 @@ class ArknightsGacha:
         with file.open("r", encoding="UTF-8") as f_obj:
             self.data = json.load(f_obj)
 
+    async def initialize(self, retry: int = 5):
+        if (self.file.parent / "ops_initialized").exists():
+            return
+        ops = self.data["operators"]["三"] + self.data["operators"]["四"] + self.data["operators"]["五"] + self.data["operators"]["六"]
+        await download(ops, retry)
+        logger.success("operator resources initialized")
+
     async def update(self):
         """更新当前卡池"""
         resp = await update()
@@ -50,8 +58,6 @@ class ArknightsGacha:
             return
         if resp.title == self.data["name"]:
             return
-        logger.debug(f"成功获取 当前up信息; 当前up池: {resp.title}")
-
         if self.data["name"] != "常驻标准寻访" and self.data["six_per"] < 1:
             self.data["operators"]["六"] += self.data["up_six_list"]
             self.data["operators"]["五"] += self.data["up_five_list"]

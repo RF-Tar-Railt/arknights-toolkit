@@ -1,24 +1,19 @@
 {
-    "name": "前路回响",
-    "six_per": 1,
-    "five_per": 0.6,
-    "four_per": 0.45,
+    "name": "轴承与火星",
+    "six_per": 0.5,
+    "five_per": 0.5,
+    "four_per": 0.2,
     "up_limit": [],
     "up_alert_limit": [],
     "up_five_list": [
-        "絮雨",
-        "桑葚",
-        "洛洛"
+        "明椒",
+        "崖心"
     ],
     "up_six_list": [
-        "泥岩",
-        "琴柳",
-        "号角"
+        "白铁"
     ],
     "up_four_list": [
-        "杰克",
-        "罗比菈塔",
-        "褐果"
+        "铅踝"
     ],
     "operators": {
         "三": [

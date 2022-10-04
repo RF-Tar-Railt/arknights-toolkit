@@ -1,4 +1,4 @@
-from arknights_toolkit import ArknightsGacha, GachaUser, simulate_image
+from arknights_toolkit.gacha import simulate_image, ArknightsGacha, GachaUser
 from io import BytesIO
 from PIL import Image
 import asyncio
