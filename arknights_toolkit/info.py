@@ -254,10 +254,10 @@ _table = {
     "潜能(提升)?": latent,
     "技能(信息)?": skills,
     "后勤技能": logistics,
-    "精(一|二|三)": upgrade,
-    "精英化材料": upgrade,
+    "精(一|二)": upgrade,
+    "精英化(材料)?": upgrade,
     "技能升级材料": material,
-    "(.*?)专(一|二|三|精)": material,
+    "(.*?)专(一|二|三|精)(材料)?": material,
     "档案": document
 }
 
