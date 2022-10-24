@@ -60,8 +60,11 @@ class ArknightsGacha:
             return
         if self.data["name"] != "常驻标准寻访" and self.data["six_per"] < 1:
             self.data["operators"]["六"] += self.data["up_six_list"]
+            self.data["operators"]["六"] = list(set(self.data["operators"]["六"]))
             self.data["operators"]["五"] += self.data["up_five_list"]
+            self.data["operators"]["五"] = list(set(self.data["operators"]["五"]))
             self.data["operators"]["四"] += self.data["up_four_list"]
+            self.data["operators"]["四"] = list(set(self.data["operators"]["四"]))
         self.data["up_six_list"].clear()
         self.data["up_five_list"].clear()
         self.data["up_four_list"].clear()

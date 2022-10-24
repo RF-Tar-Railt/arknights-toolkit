@@ -48,7 +48,7 @@ async def update():
                     continue
                 title = re.split(r"[【】]", content)
                 title = "".join(title[1:-1]) if "-" in title else title[1]
-                lines = [contents[index - 2 + _] for _ in range(8)] + [""]
+                lines = [contents[index + _] for _ in range(8)] + [""]
                 for idx, line in enumerate(lines):
                     """因为 <p> 的诡异排版，所以有了下面的一段"""
                     if "★★" in line and "%" in line:
