@@ -226,40 +226,42 @@ def initialize(cover: bool = False, retry: int = 5):
             "artist": art,
         }
         career[name] = char
-        if (operate_path / f"{name}.png").exists() and not cover:
-            continue
+        logger.success(f"{name}({char}) info saved")
+    for name in names:
         logger.debug(f"handle image of {name} ...")
         _retry = retry
         while _retry:
             try:
-                resp = httpx.get(
-                    f"https://prts.wiki/w/文件:半身像_{name}_1.png", timeout=20.0
-                )
-                root = etree.HTML(resp.text)
-                sub = root.xpath(f'//img[@alt="文件:半身像 {name} 1.png"]')[0]
-                avatar: Image.Image = Image.open(
-                    BytesIO(
-                        (
-                            httpx.get(f"https://prts.wiki{sub.xpath('@src').pop()}")
-                        ).read()
+                if not (operate_path / f"{name}.png").exists() or cover:
+                    resp = httpx.get(
+                        f"https://prts.wiki/w/文件:半身像_{name}_1.png", timeout=20.0
                     )
-                ).crop((20, 0, 124 + 20, 360))
-                with (operate_path / f"{name}.png").open("wb+") as img:
-                    avatar.save(
-                        img,
-                        format="PNG",
-                        quality=100,
-                        subsampling=2,
-                        qtables="web_high",
+                    root = etree.HTML(resp.text)
+                    sub = root.xpath(f'//img[@alt="文件:半身像 {name} 1.png"]')[0]
+                    avatar: Image.Image = Image.open(
+                        BytesIO(
+                            (
+                                httpx.get(f"https://prts.wiki{sub.xpath('@src').pop()}")
+                            ).read()
+                        )
+                    ).crop((20, 0, 124 + 20, 360))
+                    with (operate_path / f"{name}.png").open("wb+") as img:
+                        avatar.save(
+                            img,
+                            format="PNG",
+                            quality=100,
+                            subsampling=2,
+                            qtables="web_high",
+                        )
+                if not (operate_path / f"profile_{name}.png").exists() or cover:
+                    resp = httpx.get(
+                        f"https://prts.wiki/w/文件:头像_{name}.png", timeout=20.0
                     )
-                resp = httpx.get(
-                    f"https://prts.wiki/w/文件:头像_{name}.png", timeout=20.0
-                )
-                root = etree.HTML(resp.text)
-                sub = root.xpath(f'//img[@alt="文件:头像 {name}.png"]')[0]
-                with (operate_path / f"profile_{name}.png").open("wb+") as img:
-                    img.write(httpx.get(f"https://prts.wiki{sub.xpath('@src').pop()}").read())
-                logger.success(f"{name}({career[name]}) saved")
+                    root = etree.HTML(resp.text)
+                    sub = root.xpath(f'//img[@alt="文件:头像 {name}.png"]')[0]
+                    with (operate_path / f"profile_{name}.png").open("wb+") as img:
+                        img.write(httpx.get(f"https://prts.wiki{sub.xpath('@src').pop()}").read())
+                logger.success(f"{name} image saved")
                 break
             except Exception as e:
                 _retry -= 1
