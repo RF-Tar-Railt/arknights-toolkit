@@ -4,29 +4,12 @@ from dataclasses import dataclass
 from io import BytesIO
 from pathlib import Path
 from typing import Dict, List, Literal, Optional, TypedDict, overload
-import re
-import httpx
-from lxml import etree
 from PIL import Image, ImageDraw, ImageFont
 
-__all__ = ["Operator", "Guess", "GuessUnit", "OperatorWordle", "update"]
+from .img_resource import sign, wordle_path
 
-rarity_pat = re.compile(r"\|稀有度=(\d+?)\n\|.+?")
-char_pat = re.compile(r"\|职业=([^|]+?)\n\|.+?")
-sub_char_pat = re.compile(r"\|分支=([^|]+?)\n\|.+?")
-race_pat = re.compile(r"\|种族=([^|]+?)\n\|.+?")
-org_pat = re.compile(r"\|所属国家=([^|]+?)\n\|.+?")
-org_pat1 = re.compile(r"\|所属组织=([^|]+?)\n\|.+?")
-org_pat2 = re.compile(r"\|所属团队=([^|]+?)\n\|.+?")
-art_pat = re.compile(r"\|画师=([^|]+?)\n\|.+?")
-base = Path(__file__).parent / "resource" / "wordle"
-sign = {
-    "correct": Image.open(base / "correct.png"),
-    "down": Image.open(base / "down.png"),
-    "up": Image.open(base / "up.png"),
-    "wrong": Image.open(base / "wrong.png"),
-    "relate": Image.open(base / "relate.png"),
-}
+__all__ = ["Operator", "Guess", "GuessUnit", "OperatorWordle"]
+
 simple_sign = {"correct": "🟩", "down": "🟦", "up": "🟦", "wrong": "🟥", "relate": "🟨"}
 
 state = Literal["correct", "down", "up", "wrong", "relate"]
@@ -57,48 +40,10 @@ class Guess:
     select: str
 
 
-with (base / "relations.json").open("r", encoding="utf-8") as f:
+with (wordle_path / "relations.json").open("r", encoding="utf-8") as f:
     _data = json.load(f)
     relations: Dict[str, List[str]] = _data["org_related"]
     tables: Dict[str, Operator] = _data["table"]
-
-
-def update(*names: str):
-    for name in names:
-        resp = httpx.get(f"https://prts.wiki/index.php?title={name}&action=edit")
-        root = etree.HTML(resp.text, etree.HTMLParser())
-        sub = root.xpath('//textarea[@id="wpTextbox1"]')[0].text
-        char = char_pat.search(sub)[1]
-        sub_char = sub_char_pat.search(sub)[1]
-        rarity = rarity_pat.search(sub)[1]
-        try:
-            race = race_pat.search(sub)[1]
-        except TypeError:
-            race = "/"
-        try:
-            org1 = org_pat.search(sub)[1]
-        except TypeError:
-            org1 = ""
-        try:
-            org2 = org_pat1.search(sub)[1]
-        except TypeError:
-            org2 = ""
-        try:
-            org3 = org_pat2.search(sub)[1]
-        except TypeError:
-            org3 = ""
-        org = org3 if org3 else org2 if org2 else org1
-        org = org or "/"
-        art = art_pat.search(sub)[1]
-        tables[name] = {
-            "rarity": int(rarity),
-            "org": org,
-            "career": f"{char}-{sub_char}",
-            "race": race,
-            "artist": art,
-        }
-    with (base / "relations.json").open("w", encoding="utf-8") as _f:
-        json.dump(_data, _f, ensure_ascii=False)
 
 
 class OperatorWordle:
@@ -165,7 +110,7 @@ class OperatorWordle:
 
         if guess_op["org"] != selected["org"]:
             if selected_name in guess_op.get("relate", []) or name in selected.get(
-                "relate", []
+                    "relate", []
             ):
                 res["org"] = "relate"
             elif guess_op["org"] in relations[selected["org"]]:
@@ -202,11 +147,11 @@ class OperatorWordle:
         return Guess("guessing", old_res + [res], selected_name)
 
     @overload
-    def draw(self, res: Guess, simple=True) -> str:
+    def draw(self, res: Guess) -> bytes:
         ...
 
     @overload
-    def draw(self, res: Guess, simple=False) -> bytes:
+    def draw(self, res: Guess, simple: Literal[True]) -> str:
         ...
 
     def draw(self, res: Guess, simple: bool = False):
@@ -286,13 +231,3 @@ class OperatorWordle:
             qtables="web_high",
         )
         return imageio.getvalue()
-
-
-if __name__ == "__main__":
-    guess = OperatorWordle("./")
-    while True:
-        name = input(">>> ")
-        my_res = guess.guess(name, "aaa")
-        print(guess.draw(my_res, simple=True))
-        if my_res.state != "guessing":
-            break

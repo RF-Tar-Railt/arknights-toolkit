@@ -169,9 +169,7 @@ async def skill_at(page: playwright.async_api.Page, name: str, index: int = 0):
         await page.click('[aria-label="用户导航"]')
         bounding = await skill.nth(i).bounding_box()
         res.append(await page.screenshot(full_page=True, clip=bounding, scale="device"))
-    if count < 1:
-        return res
-    return res[count - 1: count]
+    return res if count < 1 else res[count - 1: count]
 
 
 async def logistics(page: playwright.async_api.Page, name: str):
@@ -278,7 +276,7 @@ async def query(
 ):
     if not page:
         async with playwright.async_api.async_playwright() as pw:
-            browser = await pw.chromium.launch(headless=True)
+            browser = await pw.chromium.launch(headless=True, channel='msedge')
             context = await browser.new_context(viewport={"width": 1440, "height": 960})
             page = await context.new_page()
 

@@ -6,68 +6,16 @@ from pathlib import Path
 from typing import List
 
 import httpx
-from loguru import logger
 from lxml import etree
-from PIL import Image, ImageEnhance
+from PIL import Image
 
 from .model import Operator
+from ..img_resource import *
 
 resource_path = Path(__file__).parent.parent / "resource"
 char_pat = re.compile(r"\|职业=(.+?)\n\|.+?")
-
-six_bgi = Image.open(resource_path / "back_six.png")
-five_bgi = Image.open(resource_path / "back_five.png")
-four_bgi = Image.open(resource_path / "back_four.png")
-low_bgi = Image.new("RGBA", (124, 360), (49, 49, 49))
-six_tail = Image.open(resource_path / "six_02.png")
-
-six_line = Image.open(resource_path / "six_01.png")
-five_line = Image.open(resource_path / "five.png")
-four_line = Image.open(resource_path / "four.png")
-
-star_circle = Image.open(resource_path / "star_02.png")
-enhance_five_line = Image.new("RGBA", (124, 720), (0x60, 0x60, 0x60, 0x50))
-enhance_four_line = Image.new("RGBA", (124, 720), (132, 108, 210, 0x10))
-brighter = ImageEnhance.Brightness(six_line)
-six_line = brighter.enhance(1.5)
-brighter = ImageEnhance.Brightness(four_line)
-four_line = brighter.enhance(0.9)
-six_line_up = six_line.crop((0, 0, six_line.size[0], 256))
-six_line_down = six_line.crop((0, 256, six_line.size[0], 512))
-five_line_up = five_line.crop((0, 0, five_line.size[0], 256))
-five_line_down = five_line.crop((0, 256, five_line.size[0], 512))
-four_line_up = four_line.crop((0, 0, four_line.size[0], 256))
-four_line_down = four_line.crop((0, 256, four_line.size[0], 512))
-logger.debug("basic image loaded.")
-characters = {
-    "先锋": Image.open(resource_path / "图标_职业_先锋_大图_白.png"),
-    "近卫": Image.open(resource_path / "图标_职业_近卫_大图_白.png"),
-    "医疗": Image.open(resource_path / "图标_职业_医疗_大图_白.png"),
-    "术师": Image.open(resource_path / "图标_职业_术师_大图_白.png"),
-    "狙击": Image.open(resource_path / "图标_职业_狙击_大图_白.png"),
-    "特种": Image.open(resource_path / "图标_职业_特种_大图_白.png"),
-    "辅助": Image.open(resource_path / "图标_职业_辅助_大图_白.png"),
-    "重装": Image.open(resource_path / "图标_职业_重装_大图_白.png"),
-}
-logger.debug("careers image loaded.")
-stars = {
-    5: Image.open(resource_path / "稀有度_白_5.png"),
-    4: Image.open(resource_path / "稀有度_白_4.png"),
-    3: Image.open(resource_path / "稀有度_白_3.png"),
-    2: Image.open(resource_path / "稀有度_白_2.png"),
-}
-logger.debug("stars image loaded.")
-
-if not (resource_path / "ops_initialized").exists():
-    logger.critical("operator resources has not initialized yet")
-    exit()
-
 with (resource_path / "careers.json").open("r", encoding="utf-8") as f:
     careers = json.load(f)
-operators = {
-    path.stem: Image.open(path) for path in (resource_path / "operators").iterdir()
-}
-logger.debug("operators image loaded.")
 
 
 async def simulate_image(ops: List[Operator]):
@@ -80,7 +28,7 @@ async def simulate_image(ops: List[Operator]):
     base = 20
     offset = 124
     l_offset = 14
-    back_img = Image.open(resource_path / "back_image.png")
+    back_img = Image.open(resource_path / "gacha" / "back_image.png")
     async with httpx.AsyncClient() as async_httpx:
         for op in ops[:10]:
             name = op.name

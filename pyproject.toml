@@ -1,6 +1,6 @@
 [project]
 name = "arknights-toolkit"
-version = "0.3.0"
+version = "0.4.0"
 description = "Arknights-related Toolkit"
 authors = [
     {name = "RF-Tar-Railt", email = "rf_tar_railt@qq.com"},
@@ -11,6 +11,8 @@ dependencies = [
     "loguru>=0.6.0",
     "lxml>=4.9.1",
     "playwright>=1.26.1",
+    "xlsxwriter>=3.0.3",
+    "matplotlib>=3.6.2",
 ]
 requires-python = ">=3.8"
 readme = "README.md"

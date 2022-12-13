@@ -6,13 +6,11 @@ from io import BytesIO
 from pathlib import Path
 from typing import List, Optional, Union
 
-from loguru import logger
 from PIL import Image, ImageDraw, ImageFont
 
 from ..util import random_pick_big
 from .model import GachaData, GachaUser, Operator
 from .update import update
-from .download import download
 
 
 class ArknightsGacha:
@@ -35,7 +33,7 @@ class ArknightsGacha:
         """
         self.five_per, self.four_per, self.three_per = 8, 50, 40
         if not file:
-            file = Path(__file__).parent.parent / "resource" / "default_gacha.json"
+            file = Path(__file__).parent.parent / "resource" / "gacha" / "default_gacha.json"
         elif isinstance(file, str):
             file = Path(file)
             if not file.exists():
@@ -43,13 +41,6 @@ class ArknightsGacha:
         self.file = file
         with file.open("r", encoding="UTF-8") as f_obj:
             self.data = json.load(f_obj)
-
-    async def initialize(self, retry: int = 5):
-        if (self.file.parent / "ops_initialized").exists():
-            return
-        ops = self.data["operators"]["三"] + self.data["operators"]["四"] + self.data["operators"]["五"] + self.data["operators"]["六"]
-        await download(ops, retry)
-        logger.success("operator resources initialized")
 
     async def update(self):
         """更新当前卡池"""
@@ -147,7 +138,6 @@ class ArknightsGacha:
             card_list.extend(
                 [up_res for _ in range(int(len(card_list) * six_per / (1 - six_per)))]
             )
-            random.shuffle(card_list)
             return Operator(random.choice(card_list), 6)
         if rank == "五":
             if (five_per := self.data["five_per"]) >= 1.0:
@@ -156,7 +146,6 @@ class ArknightsGacha:
             card_list.extend(
                 [up_res for _ in range(int(len(card_list) * five_per / (1 - five_per)))]
             )
-            random.shuffle(card_list)
             return Operator(random.choice(card_list), 5)
         if rank == "四":
             if self.data["up_four_list"]:

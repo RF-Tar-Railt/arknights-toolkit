@@ -184,6 +184,19 @@
           }
         },
         {
+          "name": "重剑手",
+          "block": 2,
+          "attack_speed": "2.5s",
+          "cost_basic": 16,
+          "talent": "同时攻击阻挡的所有敌人",
+          "tags": {
+            "static": "近战位 输出 ",
+            "optional": [
+              ""
+            ]
+          }
+        },
+        {
           "name": "武者",
           "block": 1,
           "attack_speed": "1.3s",
@@ -240,6 +253,19 @@
               "输出",
               "支援",
               "位移"
+            ]
+          }
+        },
+        {
+          "name": "哨戒铁卫",
+          "block": 3,
+          "attack_speed": "1.2s",
+          "cost_basic": 15,
+          "talent": "能够阻挡三个敌人，可以进行远程攻击 ",
+          "tags": {
+            "static": "近战位 防护 输出 ",
+            "optional": [
+              ""
             ]
           }
         },
@@ -611,7 +637,7 @@
           "cost_basic": 11,
           "talent": "能够阻挡两个敌人，使用[支援装置]协助作战",
           "tags": {
-            "static": "近战1位 支援 ",
+            "static": "近战位 支援 ",
             "optional": [
               "防护",
               "输出"
@@ -649,6 +675,32 @@
             "optional": [
               "",
               "支援"
+            ]
+          }
+        },
+        {
+          "name": "链愈师",
+          "block": 1,
+          "attack_speed": "2.85s",
+          "cost_basic": 13,
+          "talent": "恢复友方单位生命，且会在3个友方单位间跳跃，每次跳跃治疗量降低25% ",
+          "tags": {
+            "static": "远程位 治疗 ",
+            "optional": [
+              ""
+            ]
+          }
+        },
+        {
+          "name": "咒愈师",
+          "block": 1,
+          "attack_speed": "1.6s",
+          "cost_basic": 12,
+          "talent": "攻击造成法术伤害，攻击敌人时为攻击范围内一名友方干员治疗相当于50%伤害的生命值",
+          "tags": {
+            "static": "远程位 治疗 ",
+            "optional": [
+              ""
             ]
           }
         },
