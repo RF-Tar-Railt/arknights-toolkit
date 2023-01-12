@@ -56,7 +56,8 @@ else:
             "萨尔贡": [],
             "贾维团伙": ["叙拉古"],
             "莱茵生命": ["哥伦比亚", "黑钢国际", "汐斯塔"],
-            "维多利亚": ["格拉斯哥帮"],
+            "深池": ["维多利亚"],
+            "维多利亚": ["格拉斯哥帮", "深池"],
             "鲤氏侦探事务所": ["炎-龙门", "炎-岁", "炎", "龙门近卫局", "企鹅物流"],
             "罗德岛-精英干员": [
                 "行动预备组A4",
@@ -271,9 +272,9 @@ def initialize(cover: bool = False, retry: int = 5):
             logger.error(f"Fetch {name} failed.")
             continue
     with (base_path / "careers.json").open("w+", encoding="utf-8") as _f:
-        json.dump(career, _f, ensure_ascii=False)
+        json.dump(career, _f, ensure_ascii=False, indent=2)
     with (wordle_path / "relations.json").open("w+", encoding="utf-8") as _f:
-        json.dump(operators, _f, ensure_ascii=False)
+        json.dump(operators, _f, ensure_ascii=False, indent=2)
     logger.success("operator resources initialized")
     update_pool_info()
     logger.success("record pool info initialized")
@@ -282,3 +283,6 @@ def initialize(cover: bool = False, retry: int = 5):
 
     with (base_path / "ops_initialized").open("w+", encoding="utf-8") as _f:
         _f.write(__version__)
+
+    from .img_resource import update_operators
+    update_operators()

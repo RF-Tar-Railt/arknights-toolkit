@@ -7,7 +7,7 @@ from typing import List
 
 import httpx
 from lxml import etree
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 
 from .model import Operator
 from ..img_resource import *
@@ -16,7 +16,7 @@ resource_path = Path(__file__).parent.parent / "resource"
 char_pat = re.compile(r"\|职业=(.+?)\n\|.+?")
 with (resource_path / "careers.json").open("r", encoding="utf-8") as f:
     careers = json.load(f)
-
+font_base = ImageFont.truetype("simhei.ttf", 32)
 
 async def simulate_image(ops: List[Operator]):
     """
@@ -69,7 +69,7 @@ async def simulate_image(ops: List[Operator]):
                     with (resource_path / "careers.json").open("w", encoding="utf-8") as jf:
                         careers[name] = cr
                         json.dump(careers, jf, ensure_ascii=False)
-            except (ValueError, IndexError):
+            except (ValueError, IndexError, httpx.ConnectTimeout):
                 resp = await async_httpx.get("https://prts.wiki/w/文件:半身像_无_1.png")
                 root = etree.HTML(resp.text)
                 sub = root.xpath('//img[@alt="文件:半身像 无 1.png"]')[0]
@@ -85,7 +85,8 @@ async def simulate_image(ops: List[Operator]):
                         ).read()
                     )
                 ).resize((offset, 360), Image.Resampling.LANCZOS)
-
+                _draw = ImageDraw.Draw(avatar)
+                _draw.text((46, 100), '\n'.join(name), fill="white", font=font_base)
             s_size = stars[rarity].size
             star = stars[rarity].resize(
                 (int(s_size[0] * 0.6), int(47 * 0.6)), Image.Resampling.LANCZOS
@@ -129,9 +130,10 @@ async def simulate_image(ops: List[Operator]):
         imageio = BytesIO()
         back_img.save(
             imageio,
-            format="PNG",
-            quality=80,
+            format="JPEG",
+            quality=95,
             subsampling=2,
             qtables="web_high",
         )
+        update_operators()
         return imageio.getvalue()

@@ -9,9 +9,11 @@ from typing import List, Optional, Union
 from PIL import Image, ImageDraw, ImageFont
 
 from ..util import random_pick_big
+from ..img_resource import update_operators
 from .model import GachaData, GachaUser, Operator
 from .update import update
 
+font_base = ImageFont.truetype("simhei.ttf", 16)
 
 class ArknightsGacha:
     """抽卡模拟器"""
@@ -44,10 +46,13 @@ class ArknightsGacha:
 
     async def update(self):
         """更新当前卡池"""
+        update_operators()
         resp = await update()
         if not resp:
             return
         if resp.title == self.data["name"]:
+            return
+        if resp.title.startswith('跨年欢庆'):
             return
         if self.data["name"] != "常驻标准寻访" and self.data["six_per"] < 1:
             self.data["operators"]["六"] += self.data["up_six_list"]
@@ -184,7 +189,7 @@ class ArknightsGacha:
         img = Image.new("RGB", (width_base, height), color_bases)
         # 绘画对象
         draw = ImageDraw.Draw(img)
-        font_base = ImageFont.truetype("simhei.ttf", 16)
+
         draw.text(
             (tile, tile), "博士小心地拉开了包的拉链...会是什么呢？", fill="lightgrey", font=font_base
         )
@@ -271,8 +276,8 @@ class ArknightsGacha:
         imageio = BytesIO()
         img.save(
             imageio,
-            format="PNG",
-            quality=90,
+            format="JPEG",
+            quality=95,
             subsampling=2,
             qtables="web_high",
         )

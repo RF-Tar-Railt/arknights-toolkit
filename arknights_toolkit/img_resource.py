@@ -77,3 +77,8 @@ operators: Dict[str, Image.Image] = {
     path.stem: Image.open(path) for path in (resource_path / "operators").iterdir()
 }
 logger.debug("operators image loaded.")
+
+def update_operators():
+    for path in (resource_path / "operators").iterdir():
+        if path.stem not in operators:
+            operators[path.stem] = Image.open(path)

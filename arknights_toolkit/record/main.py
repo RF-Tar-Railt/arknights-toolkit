@@ -118,8 +118,6 @@ class ArkRecord:
         player_name, player_uid, token, channel = player_info
         # 获取官网寻访记录
         warning_info, record_info_list = url_scrawler(token, channel)
-        if warning_info:
-            raise RuntimeError(warning_info)
         with Path(__file__).parent.parent.joinpath(
             "resource", "record", "pool_info.json"
         ).open("r", encoding="utf-8") as f:
@@ -138,4 +136,4 @@ class ArkRecord:
         # 生成图片
         aig = ArkImage(query_info, player_uid, get_img_wh(query_info), self.save_dir)
         aig.draw_all(player_name, _real_count)
-        return aig.save()
+        return warning_info, aig.save()

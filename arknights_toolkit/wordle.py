@@ -225,8 +225,8 @@ class OperatorWordle:
         imageio = BytesIO()
         back_img.save(
             imageio,
-            format="PNG",
-            quality=90,
+            format="JPEG",
+            quality=95,
             subsampling=2,
             qtables="web_high",
         )
