@@ -94,7 +94,7 @@ class RandomOperator:
             rand.randint(0, 6) if rand.randint(0, 10) > 2 else rand.randint(6, 20)
         )
         skills = []
-        for i in range(1, 3 if level < 6 else 4):
+        for i in range(1, 2 if level < 4 else (3 if level < 6 else 4)):
             cover = rand.choice(self.rand_operator_dict['skill']['cover'])
             trigger = rand.choice(self.rand_operator_dict['skill']['trigger'])
             total = rand.randint(1, 120)
