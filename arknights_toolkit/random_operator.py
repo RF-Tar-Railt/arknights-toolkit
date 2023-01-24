@@ -107,8 +107,10 @@ class RandomOperator:
                 continue
             if position == "远程位":
                 cover = "自动回复"
+            if career_name == "先锋" and cover == "受击回复":
+                cover = "自动回复"
             if detail == "need":
-                last = rand.randint(1, math.ceil(total / 2) + (0 if rand.randint(0, 10) > 2 else rand.randint(1, start)))
+                last = rand.randint(1, math.ceil(total + 1 / 2) + (0 if rand.randint(0, 10) > 2 else rand.randint(1, start + 1)))
                 content = rand.choice(self.rand_operator_dict['skill']['detail'][detail])
                 if content == "-":
                     skills.append(
