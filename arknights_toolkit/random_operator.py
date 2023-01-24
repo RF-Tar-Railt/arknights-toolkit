@@ -2,17 +2,18 @@ import json
 from datetime import datetime
 from pathlib import Path
 from random import Random
-from typing import List, Optional, TypedDict
+import math
+from typing import List, Optional, TypedDict, Literal, Dict
 
 
 class Tags(TypedDict):
-    static: str
-    optional: List[str]
+    position: str
+    detail: List[str]
 
 
 class SubCareer(TypedDict):
     name: str
-    block: int
+    block: str
     attack_speed: str
     cost_basic: int
     talent: str
@@ -24,16 +25,24 @@ class Career(TypedDict):
     info: List[SubCareer]
 
 
+class Skill(TypedDict):
+    cover: List[Literal["自动回复", "攻击回复", "受击回复"]]
+    trigger: List[Literal["自动触发", "手动触发"]]
+    detail: Dict[Literal["need", "none"], List[str]]
+
+
 class Information(TypedDict):
     career: List[Career]
     organize: List[str]
     homeland: List[str]
     race: List[str]
+    skill: Skill
     phy_exam_evaul: List[str]
 
 
 class RandomOperator:
     """依据名称随机生成干员"""
+
     rand_operator_dict: Information
 
     def __init__(self, path: Optional[str] = None):
@@ -65,16 +74,14 @@ class RandomOperator:
         career_detail = career_info_dict["name"]
         level = rand.randint(3, 6)
         cost = (
-                career_info_dict["cost_basic"]
-                + level
-                - (2 if rand.randint(0, 4) >= 2 else rand.randint(0, 1))
+            career_info_dict["cost_basic"]
+            + level
+            - (2 if rand.randint(0, 4) >= 2 else rand.randint(0, 1))
         )
         attack_speed = career_info_dict["attack_speed"]
         block = career_info_dict["block"]
         talent = career_info_dict["talent"]
-        tags = career_info_dict["tags"]["static"] + rand.choice(
-            career_info_dict["tags"]["optional"]
-        )
+        tags = f"{career_info_dict['tags']['position']} {rand.choice(career_info_dict['tags']['detail'])}"
         infect = "参照医学检测报告，确认为" + ("感染者。" if rand.randint(0, 10) > 5 else "非感染者。")
         race = rand.choice(self.rand_operator_dict["race"])
         homeland = rand.choice(self.rand_operator_dict["homeland"])
@@ -85,7 +92,46 @@ class RandomOperator:
         fight_exp = (
             rand.randint(0, 6) if rand.randint(0, 10) > 2 else rand.randint(6, 20)
         )
-
+        skills = []
+        for i in range(1, 3 if level < 6 else 4):
+            stype = f"{rand.choice(self.rand_operator_dict['skill']['cover'])}/{rand.choice(self.rand_operator_dict['skill']['trigger'])}"
+            total = rand.randint(1, 120)
+            start = total - rand.randint(1, total)
+            detail = rand.choice(list(self.rand_operator_dict['skill']['detail'].keys()))
+            if career_detail == "处决者":
+                skills.append(
+                    f"【{i}】被动\n  初始 0; 消耗 0; 持续 -"
+                )
+                continue
+            if detail == "need":
+                last = rand.randint(1, math.ceil(total / 2))
+                content = rand.choice(self.rand_operator_dict['skill']['detail'][detail])
+                if content == "-":
+                    skills.append(
+                        f"【{i}】{stype}\n  初始 {start}; 消耗 {total}; 持续 {last}s"
+                    )
+                else:
+                    skills.append(
+                        f"【{i}】{stype}\n  初始 {start}; 消耗 {total}; 持续 {last}s\n  {content}"
+                    )
+            else:
+                content = rand.choice(self.rand_operator_dict['skill']['detail'][detail])
+                if content == "-":
+                    skills.append(
+                        f"【{i}】{stype}\n  初始 {start}; 消耗 {total}; 持续 0s"
+                    )
+                else:
+                    if content.endswith("持续时间无限"):
+                        start = 0
+                        if career_detail == "行商":
+                            total = total if total < 15 else math.ceil(total / 5)
+                    elif content.startswith("可充能") or content.startswith("可以在以下状态和初始状态间切换"):
+                        start = 0
+                        total = total if total < 20 else math.ceil(total / 5)
+                    skills.append(
+                        f"【{i}】{stype}\n  初始 {start}; 消耗 {total}; 持续 -\n  {content}"
+                    )
+        skill = "\n".join(skills)
         return "\n".join(
             [
                 f"{name}",
@@ -102,7 +148,10 @@ class RandomOperator:
                 f"【身高】{height} cm",
                 f"【出生地】{homeland}",
                 f"【所属阵营】{organize}",
-                f"【战斗经验】{'无' if fight_exp == 0 else f'{fight_exp}年'}" "\n",
+                f"【战斗经验】{'无' if fight_exp == 0 else f'{fight_exp}年'}",
+                "\n",
+                f"【技能】\n{skill}",
+                "\n",
                 f"【矿石病感染情况】{infect}",
                 f"【物理强度】{rand.choice(self.rand_operator_dict['phy_exam_evaul'])}",
                 f"【战场机动】{rand.choice(self.rand_operator_dict['phy_exam_evaul'])}",
