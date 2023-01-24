@@ -81,7 +81,8 @@ class RandomOperator:
         attack_speed = career_info_dict["attack_speed"]
         block = career_info_dict["block"]
         talent = career_info_dict["talent"]
-        tags = f"{career_info_dict['tags']['position']} {rand.choice(career_info_dict['tags']['detail'])}"
+        position = career_info_dict['tags']['position']
+        tags = f"{position} {rand.choice(career_info_dict['tags']['detail'])}"
         infect = "参照医学检测报告，确认为" + ("感染者。" if rand.randint(0, 10) > 5 else "非感染者。")
         race = rand.choice(self.rand_operator_dict["race"])
         homeland = rand.choice(self.rand_operator_dict["homeland"])
@@ -94,7 +95,8 @@ class RandomOperator:
         )
         skills = []
         for i in range(1, 3 if level < 6 else 4):
-            stype = f"{rand.choice(self.rand_operator_dict['skill']['cover'])}/{rand.choice(self.rand_operator_dict['skill']['trigger'])}"
+            cover = rand.choice(self.rand_operator_dict['skill']['cover'])
+            trigger = rand.choice(self.rand_operator_dict['skill']['trigger'])
             total = rand.randint(1, 120)
             start = total - rand.randint(1, total)
             detail = rand.choice(list(self.rand_operator_dict['skill']['detail'].keys()))
@@ -103,24 +105,30 @@ class RandomOperator:
                     f"【{i}】被动\n  初始 0; 消耗 0; 持续 -"
                 )
                 continue
+            if position == "远程位":
+                cover = "自动回复"
             if detail == "need":
-                last = rand.randint(1, math.ceil(total / 2))
+                last = rand.randint(1, math.ceil(total / 2) + (0 if rand.randint(0, 10) > 2 else rand.randint(1, start)))
                 content = rand.choice(self.rand_operator_dict['skill']['detail'][detail])
                 if content == "-":
                     skills.append(
-                        f"【{i}】{stype}\n  初始 {start}; 消耗 {total}; 持续 {last}s"
+                        f"【{i}】{cover}/{trigger}\n  初始 {start}; 消耗 {total}; 持续 {last}s"
                     )
                 else:
                     skills.append(
-                        f"【{i}】{stype}\n  初始 {start}; 消耗 {total}; 持续 {last}s\n  {content}"
+                        f"【{i}】{cover}/手动触发\n  初始 {start}; 消耗 {total}; 持续 {last}s\n  {content}"
                     )
             else:
                 content = rand.choice(self.rand_operator_dict['skill']['detail'][detail])
                 if content == "-":
                     skills.append(
-                        f"【{i}】{stype}\n  初始 {start}; 消耗 {total}; 持续 0s"
+                        f"【{i}】{cover}/{trigger}\n  初始 {start}; 消耗 {total}; 持续 0s"
                     )
                 else:
+                    if content.startswith("可充能") or content == "持续时间无限":
+                        trigger = "自动触发"
+                    else:
+                        trigger = "手动触发"
                     if content.endswith("持续时间无限"):
                         start = 0
                         if career_detail == "行商":
@@ -129,7 +137,7 @@ class RandomOperator:
                         start = 0
                         total = total if total < 20 else math.ceil(total / 5)
                     skills.append(
-                        f"【{i}】{stype}\n  初始 {start}; 消耗 {total}; 持续 -\n  {content}"
+                        f"【{i}】{cover}/{trigger}\n  初始 {start}; 消耗 {total}; 持续 -\n  {content}"
                     )
         skill = "\n".join(skills)
         return "\n".join(
