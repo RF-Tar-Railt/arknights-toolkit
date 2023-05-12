@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Dict, List, Literal, Optional, TypedDict, overload
 from PIL import Image, ImageDraw, ImageFont
 
-from .img_resource import sign, wordle_path
+from .images import sign, wordle_path
 
 __all__ = ["Operator", "Guess", "GuessUnit", "OperatorWordle"]
 

@@ -97,7 +97,7 @@ class RandomOperator:
         for i in range(1, 2 if level < 4 else (3 if level < 6 else 4)):
             cover = rand.choice(self.rand_operator_dict['skill']['cover'])
             trigger = rand.choice(self.rand_operator_dict['skill']['trigger'])
-            total = rand.randint(1, 120)
+            total = rand.randint(1, 24 if cover == "受击回复" else 120)
             start = total - rand.randint(1, total)
             detail = rand.choice(list(self.rand_operator_dict['skill']['detail'].keys()))
             if career_detail == "处决者":
@@ -105,10 +105,10 @@ class RandomOperator:
                     f"【{i}】被动\n  初始 0; 消耗 0; 持续 -"
                 )
                 continue
-            if position == "远程位":
-                cover = "自动回复"
+            if position == "远程位" and cover == "受击回复":
+                cover = rand.choice(["自动回复", "攻击回复"])
             if career_name == "先锋" and cover == "受击回复":
-                cover = "自动回复"
+                cover = rand.choice(["自动回复"])
             if detail == "need":
                 last = rand.randint(1, math.ceil(total + 1 / 2) + (0 if rand.randint(0, 10) > 2 else rand.randint(1, start + 1)))
                 content = rand.choice(self.rand_operator_dict['skill']['detail'][detail])

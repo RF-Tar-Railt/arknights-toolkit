@@ -1,13 +1,12 @@
-from arknights_toolkit import initialize
+from arknights_toolkit.update.gacha import generate
+from arknights_toolkit.update.main import fetch
+from pathlib import Path
 import asyncio
-
-initialize(cover=True)
 
 
 async def main():
-    from arknights_toolkit import ArknightsGacha
-    gacha = ArknightsGacha()
-    await gacha.update()
+    await fetch(cover=False)
+    await generate(Path("exam_gacha.json"))
 
 
 asyncio.run(main())

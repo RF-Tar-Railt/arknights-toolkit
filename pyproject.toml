@@ -1,6 +1,6 @@
 [project]
 name = "arknights-toolkit"
-version = "0.4.3"
+version = "0.5.0"
 description = "Arknights-related Toolkit"
 authors = [
     {name = "RF-Tar-Railt", email = "rf_tar_railt@qq.com"},
@@ -10,9 +10,9 @@ dependencies = [
     "httpx>=0.23.0",
     "loguru>=0.6.0",
     "lxml>=4.9.1",
-    "playwright>=1.26.1",
     "xlsxwriter>=3.0.3",
     "matplotlib>=3.6.2",
+    "cli-lite>=0.7.0",
 ]
 requires-python = ">=3.8"
 readme = "README.md"
@@ -20,6 +20,9 @@ license = {text = "AGPL-3.0"}
 
 [project.urls]
 repository = "https://github.com/RF-Tar-Railt/arknigths-toolkit"
+
+[project.scripts]
+arkkit = "arknights_toolkit.cli.__main__:main"
 
 [build-system]
 requires = ["pdm-pep517>=1.0.0"]

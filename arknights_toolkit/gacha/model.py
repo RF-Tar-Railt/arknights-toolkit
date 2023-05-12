@@ -24,18 +24,3 @@ class GachaData(TypedDict):
 class GachaUser:
     six_per: int = field(default=2)
     six_statis: int = field(default=0)
-
-
-class UpdateChar(NamedTuple):
-    name: str
-    limit: bool
-    chance: float
-
-
-@dataclass
-class UpdateResponse:
-    title: str
-    four_chars: List[UpdateChar]
-    five_chars: List[UpdateChar]
-    six_chars: List[UpdateChar]
-    pool: str

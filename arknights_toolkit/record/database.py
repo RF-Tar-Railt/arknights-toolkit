@@ -121,31 +121,21 @@ class ArkDatabase:
 
     def get_pool_in_view(self, player_uid: int):
         """获取视图中包含的卡池"""
-        base_sql = (
-            f"select distinct {self.config['exclusive_field']} from v{player_uid}"
-        )
-        self.cursor.execute(base_sql)
+        self.cursor.execute(f"select distinct {self.config['exclusive_field']} from v{player_uid}")
         return [item[0] for item in self.cursor.fetchall()]
 
     def get_record_count(self, player_uid: int):
-        """_summary_
-        获取有效记录数量
-        Returns:
-            _type_: _description_
-        """
-        count_sql = (
-            f"select count(*) from {self.config['record_table']} "
-            f"where {self.config['player_uid_field']} = {player_uid}"
+        """获取有效记录数量"""
+        self.cursor.execute(
+            "select count(*) from {self.config['record_table']} "
+            "where {self.config['player_uid_field']} = ?",
+            (player_uid, )
         )
-        self.cursor.execute(count_sql)
         return self.cursor.fetchone()[0]
 
     def check_view(self, player_uid: int):
-        """_summary_
-        处理完成后删除视图
-        """
-        drop_view_sql = f"drop view if exists v{player_uid}"
-        self.cursor.execute(drop_view_sql)
+        """处理完成后删除视图"""
+        self.cursor.execute(f"drop view if exists v{player_uid}")
 
     def _handle_max_count(self, player_uid: int, count: int):
         return self.get_record_count(player_uid) if count < 0 else count
@@ -166,9 +156,9 @@ class ArkDatabase:
                 f"create view v{player_uid} as "
                 f"select * "
                 f"from {self.config['record_table']} "
-                f"where {self.config['player_uid_field']} = '{player_uid}' "
+                f"where {self.config['player_uid_field']} = :uid "
                 f"order by {self.config['timestamp_field']} desc "
-                f"limit {max_record_count};"
+                f"limit :mcount ;"
             )
             # logger.info(create_view_sql)
         else:  # 旧版单卡池查询用
@@ -176,11 +166,18 @@ class ArkDatabase:
                 f"create view v{player_uid} as "
                 f"select * "
                 f"from {self.config['record_field']} "
-                f"where {self.config['player_uid_field']} = '{player_uid}' "
-                f"and {self.config['pool_name_field']} = '{target_pool}' "
-                f"limit {max_record_count};"
+                f"where {self.config['player_uid_field']} = :uid "
+                f"and {self.config['pool_name_field']} = :pool "
+                f"limit :mcount ;"
             )
-        self.cursor.execute(create_view_sql)
+        self.cursor.execute(
+            create_view_sql,
+            {
+                "uid": str(player_uid),
+                "pool": target_pool,
+                "mcount": max_record_count
+            }
+        )
         return max_record_count
 
     def finish(self, player_uid: int):
@@ -188,8 +185,7 @@ class ArkDatabase:
         self.check_view(player_uid)
 
     def export_query(self, player_uid: int):
-        sql = f"select * from v{player_uid}"
-        self.cursor.execute(sql)
+        self.cursor.execute(f"select * from v{player_uid}")
         res = self.cursor.fetchall()
         self.finish(player_uid)
         return res
@@ -277,15 +273,15 @@ class ArkDatabase:
         tmp_info = {"chars": [], "count": 0}
         # 遍历普通池和每个限定池
         for pool in self.get_pool_in_view(player_uid):
-            char_sql = (
+            self.cursor.execute(
                 f"select "
                 f"{self.config['char_name_field']}, {self.config['timestamp_field']}, "
                 f"{self.config['star_field']}, {self.config['is_new_field']}, "
                 f"{self.config['pool_name_field']}, {self.config['record_id_field']} "
-                f"from v{player_uid} where {self.config['exclusive_field']} = '{pool}' "
-                f"order by {self.config['record_id_field']} desc"
+                f"from v{player_uid} where {self.config['exclusive_field']} = ? "
+                f"order by {self.config['record_id_field']} desc",
+                (pool,)
             )
-            self.cursor.execute(char_sql)
             char_info_lst = list(self.cursor.fetchall())
             last_mark_idx = 1e20  # 上一次获得六星时的序号
             char_info_lst = char_info_lst[::-1]
@@ -334,14 +330,14 @@ class ArkDatabase:
         """查询卡池水位情况"""
         tmp_info = {"text": "", "title": "卡池水位情况"}
         for pool in self.get_pool_in_view(player_uid):
-            char_sql = (
+            self.cursor.execute(
                 f"select "
                 f"{self.config['char_name_field']}, {self.config['timestamp_field']}, "
                 f"{self.config['star_field']}, {self.config['record_id_field']} "
-                f"from v{player_uid} where {self.config['exclusive_field']} = '{pool}' "
-                f"order by {self.config['record_id_field']} desc"
+                f"from v{player_uid} where {self.config['exclusive_field']} = ? "
+                f"order by {self.config['record_id_field']} desc",
+                (pool,)
             )
-            self.cursor.execute(char_sql)
             char_info_lst = list(self.cursor.fetchall())
             for i, char in enumerate(char_info_lst):
                 if char[2] == 6:  # 是六星
@@ -355,12 +351,12 @@ class ArkDatabase:
         """
         预留 查询获得次数最多的干员情况
         """
-        fclientuent_sql = (
+        self.cursor.execute(
             f"select {self.config['char_name_field']}, count(*) "
             f"from v{player_uid} group by {self.config['char_name_field']} "
-            f"order by count(*) desc limit {limit}"
+            f"order by count(*) desc limit ?",
+            (limit,)
         )
-        self.cursor.execute(fclientuent_sql)
         fre_info = self.cursor.fetchall()
         tmp_lst = []
         for fre_char in fre_info:
@@ -375,6 +371,9 @@ class ArkDatabase:
         response = get_player_uid(token)
         try:
             sql = (
+
+            )
+            self.cursor.execute(
                 f"replace into {self.config['user_table']}"
                 f"("
                 f"{self.config['user_session_field']}, "
@@ -383,16 +382,9 @@ class ArkDatabase:
                 f"{self.config['token_field']}, "
                 f"{self.config['channel_field']}"
                 f")"
-                f"values "
-                f"("
-                f"'{user_session}', "
-                f"'{response['uid']}', "
-                f"'{response['name']}', "
-                f"'{token}', "
-                f"{response['channelMasterId']}"
-                f");"
+                f"values (?, ?, ?, ?, ?);",
+                (user_session, {response['uid']}, {response['name']}, {token}, {response['channelMasterId']})
             )
-            self.cursor.execute(sql)
             self.db.commit()
             return
         except Exception as e:
@@ -425,9 +417,11 @@ class ArkDatabase:
             _type_: _description_
         """
         try:
-            sql = f"select * from {self.config['user_table']} \
-                where {self.config['user_session_field']} = '{user_session}';"
-            self.cursor.execute(sql)
+            self.cursor.execute(
+                f"select * from {self.config['user_table']} "
+                f"where {self.config['user_session_field']} = ?;",
+                (user_session, )
+            )
             # user_name token user_id channel
             res = self.cursor.fetchone()[1:]
         except Exception as e:

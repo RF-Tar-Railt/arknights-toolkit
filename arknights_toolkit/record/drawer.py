@@ -10,7 +10,7 @@ from matplotlib import pyplot as plt
 from PIL import Image, ImageDraw, ImageFont
 
 from .style import *
-from ..img_resource import operators, rainbow_image, title_image, bottom_image
+from ..images import operators, rainbow_image, title_image, bottom_image
 
 """ 
 利用PIL和PLT制图
@@ -263,9 +263,13 @@ class CharImage(BaseImage):
             char_star (int): 干员星级
 
         """
-        char_profile0 = operators.get(
-            f"profile_{char_name}", Image.open(resource_path / "profile_海猫.png")
-        )
+        key = f"{char_name}_{char_star}"
+        if key in operators:
+            char_profile0 = operators[key]
+        elif (file := Path(__file__).parent.parent / "resource" / "operators" / f"{key}.png").exists():
+            char_profile0 = operators[key] = Image.open(file)
+        else:
+            char_profile0 = Image.open(resource_path / "profile_海猫.png")
         # 重塑大小
         char_profile0 = char_profile0.resize(
             (char_text_p["profile_w"], char_text_p["profile_w"])

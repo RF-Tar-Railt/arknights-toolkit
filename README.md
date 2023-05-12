@@ -18,7 +18,6 @@
 - 模拟十连
 - 随机干员生成
 - 公招链接生成
-- 干员信息查询
 - 猜干员游戏
 - 抽卡结果查询
 
@@ -36,26 +35,29 @@ pdm add arknights-toolkit
 
 ## 配置
 
-抽卡分析功能依赖于sqlite数据库，请参考网络资源（如[菜鸟教程](https://www.runoob.com/sqlite/sqlite-installation.html)）安装SQLite数据库，无需控制数据库用户、创建数据库表等操作。但若为Windows环境，还需设置环境变量，无需配置数据库环境
+`arknights-toolkit` 配套了 cli 工具用于资源下载:
 
-使用前需要运行 initialize, 以下载图片资源:
+初始化数据与图片资源:
+```shell
+arkkit init
+```
 
-```python
-from arknights_toolkit import initialize
-
-initialize(cover=True)
+更新抽卡卡池:
+```shell
+arkkit update gacha path/to/gacha.json
 ```
 
 ## 示例
 
 ```python
-from arknights_toolkit.gacha import ArknightsGacha, GachaUser, simulate_image
+from arknights_toolkit.gacha import ArknightsGacha, GachaUser
+from arknights_toolkit.gacha.simulate import simulate_image
 from pathlib import Path
 import asyncio
 
 
 async def main():
-    gacha = ArknightsGacha()
+    gacha = ArknightsGacha("path/to/gacha.json")
     user = GachaUser()
     data = gacha.gacha(user, 10)
     img = await simulate_image(data[0])

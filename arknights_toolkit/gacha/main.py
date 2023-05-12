@@ -4,14 +4,14 @@ import math
 import random
 from io import BytesIO
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import List, Union
+import asyncio
 
 from PIL import Image, ImageDraw, ImageFont
 
 from ..util import random_pick_big
-from ..img_resource import update_operators
+from ..update.gacha import generate
 from .model import GachaData, GachaUser, Operator
-from .update import update
 
 font_base = ImageFont.truetype("simhei.ttf", 16)
 
@@ -29,64 +29,20 @@ class ArknightsGacha:
         3: (0x09, 0xB3, 0xF7),  # 09b3f7
     }
 
-    def __init__(self, file: Optional[Union[str, Path]] = None):
+    def __init__(self, file:Union[str, Path]):
         """
         :param file: 卡池信息文件
         """
         self.five_per, self.four_per, self.three_per = 8, 50, 40
-        if not file:
-            file = Path(__file__).parent.parent / "resource" / "gacha" / "default_gacha.json"
-        elif isinstance(file, str):
-            file = Path(file)
-            if not file.exists():
-                raise FileNotFoundError
-        self.file = file
-        with file.open("r", encoding="UTF-8") as f_obj:
+        self.file = Path(file) if isinstance(file, str) else file
+        if not self.file.exists():
+            asyncio.run(generate(self.file))
+        with self.file.open("r", encoding="UTF-8") as f_obj:
             self.data = json.load(f_obj)
 
     async def update(self):
         """更新当前卡池"""
-        update_operators()
-        resp = await update()
-        if not resp:
-            return
-        if resp.title == self.data["name"]:
-            return
-        if resp.title.startswith('跨年欢庆'):
-            return
-        if self.data["name"] != "常驻标准寻访" and self.data["six_per"] < 1:
-            self.data["operators"]["六"] += self.data["up_six_list"]
-            self.data["operators"]["六"] = list(set(self.data["operators"]["六"]))
-            self.data["operators"]["五"] += self.data["up_five_list"]
-            self.data["operators"]["五"] = list(set(self.data["operators"]["五"]))
-            self.data["operators"]["四"] += self.data["up_four_list"]
-            self.data["operators"]["四"] = list(set(self.data["operators"]["四"]))
-        self.data["up_six_list"].clear()
-        self.data["up_five_list"].clear()
-        self.data["up_four_list"].clear()
-        self.data["up_limit"].clear()
-        self.data["up_alert_limit"].clear()
-        self.data["name"] = resp.title
-        for char in resp.six_chars:
-            if char.limit:
-                if not self.data["up_limit"]:
-                    self.data["up_limit"].append(char.name)
-                else:
-                    self.data["up_alert_limit"].append(char.name)
-                    continue
-            else:
-                self.data["up_six_list"].append(char.name)
-            self.data["six_per"] = char.chance
-        for char in resp.five_chars:
-            self.data["up_five_list"].append(char.name)
-            self.data["five_per"] = char.chance
-        for char in resp.four_chars:
-            self.data["up_four_list"].append(char.name)
-            self.data["four_per"] = char.chance
-
-        with self.file.open("w", encoding="UTF-8") as f_obj:
-            json.dump(self.data, f_obj, ensure_ascii=False, indent=4)
-        return resp
+        return await generate(self.file)
 
     def gacha(self, user: GachaUser, count: int = 1) -> List[List[Operator]]:
         """

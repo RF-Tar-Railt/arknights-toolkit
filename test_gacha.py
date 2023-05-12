@@ -1,11 +1,12 @@
-from arknights_toolkit.gacha import simulate_image, ArknightsGacha, GachaUser
+from arknights_toolkit.gacha import ArknightsGacha, GachaUser
+from arknights_toolkit.gacha.simulate import simulate_image
 from io import BytesIO
 from PIL import Image
 import asyncio
 
 
 async def main():
-    gacha = ArknightsGacha()
+    gacha = ArknightsGacha("exam_gacha.json")
     user = GachaUser()
     #data = gacha.gacha_with_img(user, 300)
     data = gacha.gacha(user, 300)

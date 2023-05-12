@@ -2,21 +2,22 @@ import json
 import random
 import re
 from io import BytesIO
-from pathlib import Path
 from typing import List
 
 import httpx
 from lxml import etree
-from PIL import Image, ImageDraw, ImageFont
+from PIL import ImageDraw, ImageFont
 
 from .model import Operator
-from ..img_resource import *
+from ..update.main import fetch_image
+from ..images import *
 
 resource_path = Path(__file__).parent.parent / "resource"
 char_pat = re.compile(r"\|职业=(.+?)\n\|.+?")
 with (resource_path / "careers.json").open("r", encoding="utf-8") as f:
     careers = json.load(f)
 font_base = ImageFont.truetype("simhei.ttf", 32)
+
 
 async def simulate_image(ops: List[Operator]):
     """
@@ -40,23 +41,9 @@ async def simulate_image(ops: List[Operator]):
                         (96, 96), Image.Resampling.LANCZOS
                     )
                 else:
-                    resp = await async_httpx.get(f"https://prts.wiki/w/文件:半身像_{name}_1.png")
-                    root = etree.HTML(resp.text)
-                    sub = root.xpath(f'//img[@alt="文件:半身像 {name} 1.png"]')[0]
-                    avatar: Image.Image = Image.open(
-                        BytesIO(
-                            (
-                                await async_httpx.get(
-                                    f"https://prts.wiki{sub.xpath('@src').pop()}"
-                                )
-                            ).read()
-                        )
-                    ).crop((20, 0, offset + 20, 360))
-                    with (resource_path / "operators" / f"{name}.png").open("wb+") as _f:
-                        operators[name] = avatar
-                        avatar.save(
-                            _f, format="PNG", quality=100, subsampling=2, qtables="web_high"
-                        )
+                    avatar = await fetch_image(name, async_httpx, 1)
+                    if not avatar:
+                        raise ValueError
                     resp1 = await async_httpx.get(
                         f"https://prts.wiki/index.php?title={name}&action=edit"
                     )
@@ -69,21 +56,12 @@ async def simulate_image(ops: List[Operator]):
                     with (resource_path / "careers.json").open("w", encoding="utf-8") as jf:
                         careers[name] = cr
                         json.dump(careers, jf, ensure_ascii=False)
-            except (ValueError, IndexError, httpx.ConnectTimeout):
-                resp = await async_httpx.get("https://prts.wiki/w/文件:半身像_无_1.png")
-                root = etree.HTML(resp.text)
-                sub = root.xpath('//img[@alt="文件:半身像 无 1.png"]')[0]
+            except (ValueError, IndexError, httpx.TimeoutException, httpx.ConnectError):
                 logo: Image.Image = characters[random.choice(list(characters))].resize(
                     (96, 96), Image.Resampling.LANCZOS
                 )
                 avatar: Image.Image = Image.open(
-                    BytesIO(
-                        (
-                            await async_httpx.get(
-                                f"https://prts.wiki{sub.xpath('@src').pop()}"
-                            )
-                        ).read()
-                    )
+                    Path(__file__).parent.parent / "resource" / "gacha" / "半身像_无_1.png"
                 ).resize((offset, 360), Image.Resampling.LANCZOS)
                 _draw = ImageDraw.Draw(avatar)
                 _draw.text((46, 100), '\n'.join(name), fill="white", font=font_base)

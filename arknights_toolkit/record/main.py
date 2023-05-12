@@ -3,7 +3,7 @@ from pathlib import Path
 import json
 import urllib
 from typing import Tuple, Optional
-
+import asyncio
 import httpx
 
 from .database import ArkDatabase
@@ -11,7 +11,9 @@ from .drawer import ArkImage
 from .style import get_img_wh
 
 
-def url_scrawler(token: str, channel: int) -> Tuple[str, list]:
+from ..update.record import generate
+
+async def url_scrawler(token: str, channel: int) -> Tuple[str, list]:
     """_summary_
     爬取官网抽卡记录
     Args:
@@ -31,24 +33,27 @@ def url_scrawler(token: str, channel: int) -> Tuple[str, list]:
         "Language/zh_CN webview/0"
     )
     headers = {"User-Agent": user_agent}
-    try:
-        for i in range(1, 11):
-            res_data = httpx.get(f"{base_url}&channelId={channel}&page={i}", headers=headers).json()
-            if page_data := res_data["data"]["list"]:
-                draw_info_list.extend(page_data)
-            else:
-                break
-        warning_info = "" if draw_info_list else "未获取到有效寻访信息。正在返回缓存信息"
-        return warning_info, draw_info_list
-    except Exception as e:
-        warning_info = "" if draw_info_list else "未成功访问寻访页面，token可能已经失效。正在返回缓存信息"
-        return warning_info, []
+    async with httpx.AsyncClient() as client:
+        try:
+            for i in range(1, 11):
+                _data = await client.get(f"{base_url}&channelId={channel}&page={i}", headers=headers)
+                res_data = _data.json()
+                if page_data := res_data["data"]["list"]:
+                    draw_info_list.extend(page_data)
+                else:
+                    break
+            warning_info = "" if draw_info_list else "未获取到有效寻访信息。正在返回缓存信息"
+            return warning_info, draw_info_list
+        except Exception as e:
+            warning_info = "" if draw_info_list else "未成功访问寻访页面，token可能已经失效。正在返回缓存信息"
+            return warning_info, []
 
 
 class ArkRecord:
     def __init__(
         self,
         save_dir: str,
+        pool_path: Optional[str] = None,
         db_path: Optional[str] = None,
         max_char_count: int = 20,
         max_pool_count: int = 8,
@@ -56,6 +61,7 @@ class ArkRecord:
         """
         明日方舟抽卡数据分析
         :param save_dir: 分析结果图像的保存目录
+        :param pool_path: 卡池数据文件目录，默认为本项目的 resource/record/pool_info.json
         :param db_path: 数据文件目录，默认为用户路径
         :param max_char_count: 最多展示的干员
         :param max_pool_count: 最多展示的卡池
@@ -64,6 +70,14 @@ class ArkRecord:
         self.save_dir.mkdir(parents=True, exist_ok=True)
         if not self.save_dir.is_dir():
             raise NotADirectoryError(save_dir)
+        if pool_path is None:
+            self.pool_path = Path(__file__).parent.parent.joinpath(
+                "resource", "record", "pool_info.json"
+            )
+        else:
+            self.pool_path = Path(pool_path)
+            if not self.pool_path.exists():
+                asyncio.run(generate(self.pool_path))
         self.database = ArkDatabase(db_path, max_char_count, max_pool_count)
 
     def user_token_save(self, player_token: str, user_session: str):
@@ -103,7 +117,7 @@ class ArkRecord:
         player_info = self.database.read_token_from_db(user_session)
         return self.database.export_record2file(int(player_info[2]), player_info[0], user_session, xlsx_save_path)
 
-    def user_analysis(
+    async def user_analysis(
         self,
         user_session: str,
         count: int = -1,
@@ -117,10 +131,8 @@ class ArkRecord:
         player_info = self.database.read_token_from_db(user_session)
         player_name, player_uid, token, channel = player_info
         # 获取官网寻访记录
-        warning_info, record_info_list = url_scrawler(token, channel)
-        with Path(__file__).parent.parent.joinpath(
-            "resource", "record", "pool_info.json"
-        ).open("r", encoding="utf-8") as f:
+        warning_info, record_info_list = await url_scrawler(token, channel)
+        with self.pool_path.open("r", encoding="utf-8") as f:
             private_tot_pool_info = json.load(f)
 
         if record_info_list:
