@@ -14,6 +14,10 @@ simple_sign = {"correct": "🟩", "down": "🟦", "up": "🟦", "wrong": "🟥",
 
 state = Literal["correct", "down", "up", "wrong", "relate"]
 
+font_base = ImageFont.truetype(
+    str((Path(__file__).parent / "resource" / "HarmonyOS_Sans_SC_Medium.ttf").absolute()),
+    20
+)
 
 class Operator(TypedDict):
     rarity: int
@@ -169,7 +173,6 @@ class OperatorWordle:
 
         back_img = Image.new("RGB", (600, 80 * (len(res.lines) + 2)), (0, 0, 0))
         draw = ImageDraw.Draw(back_img)
-        font_base = ImageFont.truetype("simhei.ttf", 20)
         draw.text((20, 45), "稀有度", fill="white", font=font_base)
         draw.text((130, 45), "阵营", fill="white", font=font_base)
         draw.text((230, 45), "职业", fill="white", font=font_base)

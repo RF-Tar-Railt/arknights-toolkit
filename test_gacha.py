@@ -8,11 +8,11 @@ import asyncio
 async def main():
     gacha = ArknightsGacha("exam_gacha.json")
     user = GachaUser()
-    #data = gacha.gacha_with_img(user, 300)
-    data = gacha.gacha(user, 300)
-    #io = BytesIO(data)
+    data = gacha.gacha_with_img(user, 300)
+    #data = gacha.gacha(user, 300)
+    io = BytesIO(data)
 
-    io = BytesIO(await simulate_image(data[5]))
+    #io = BytesIO(await simulate_image(data[5]))
     image = Image.open(io, "r")
     image.show("res")
     #image.save("example_sim.png")

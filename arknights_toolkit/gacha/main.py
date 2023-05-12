@@ -13,7 +13,11 @@ from ..util import random_pick_big
 from ..update.gacha import generate
 from .model import GachaData, GachaUser, Operator
 
-font_base = ImageFont.truetype("simhei.ttf", 16)
+font_base = ImageFont.truetype(
+    str((Path(__file__).parent.parent / "resource" / "HarmonyOS_Sans_SC_Medium.ttf").absolute()),
+    16
+)
+
 
 class ArknightsGacha:
     """抽卡模拟器"""

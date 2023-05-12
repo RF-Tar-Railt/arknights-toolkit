@@ -16,8 +16,8 @@ resource_path = Path(__file__).parent.parent / "resource"
 char_pat = re.compile(r"\|职业=(.+?)\n\|.+?")
 with (resource_path / "careers.json").open("r", encoding="utf-8") as f:
     careers = json.load(f)
-font_base = ImageFont.truetype("simhei.ttf", 32)
 
+font_base = ImageFont.truetype(str((resource_path / "HarmonyOS_Sans_SC_Medium.ttf").absolute()), 32)
 
 async def simulate_image(ops: List[Operator]):
     """
