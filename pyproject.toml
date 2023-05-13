@@ -1,6 +1,6 @@
 [project]
 name = "arknights-toolkit"
-version = "0.5.3"
+version = "0.5.4"
 description = "Arknights-related Toolkit"
 authors = [
     {name = "RF-Tar-Railt", email = "rf_tar_railt@qq.com"},
@@ -25,8 +25,8 @@ repository = "https://github.com/RF-Tar-Railt/arknigths-toolkit"
 arkkit = "arknights_toolkit.cli.__main__:main"
 
 [build-system]
-requires = ["pdm-pep517>=1.0.0"]
-build-backend = "pdm.pep517.api"
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
 
 [tool]
 [tool.pdm]

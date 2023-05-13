@@ -156,7 +156,7 @@ async def generate(file: Path):
     try:
         response = await update()
     except (TimeoutException, ConnectError) as e:
-        logger.warning(f"明日方舟 获取公告出错: {type(e)}({e})")
+        logger.warning(f"明日方舟 获取公告出错: {type(e)}({e})\n请检查网络或代理设置")
         return
     pool = {
         "name": response.title,
@@ -219,7 +219,7 @@ async def generate(file: Path):
             with tablefile.open("r", encoding="utf-8") as f:
                 table = json.load(f)
         else:
-            logger.warning("明日方舟 获取卡池干员出错")
+            logger.warning("明日方舟 获取卡池干员出错\n请检查网络或代理设置")
     make(table, pool)
     with file.open("w+", encoding="utf-8") as f:
         json.dump(pool, f, ensure_ascii=False, indent=2)

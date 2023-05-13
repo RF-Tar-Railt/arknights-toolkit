@@ -264,7 +264,7 @@ async def fetch(select: Union[int, FetchFlag] = 0b11, cover: bool = False, retry
                 if select & 0b01 and (not (operate_path / f"profile_{name}.png").exists() or cover):
                     await fetch_profile_image(name, client, retry)
             except (httpx.TimeoutException, httpx.ConnectError) as e:
-                logger.error(f"failed to get {name}: {type(e)}({e})")
+                logger.error(f"拉取 {name} 失败: {type(e)}({e})\n请检查网络或代理设置")
                 continue
 
     with (base_path / "careers.json").open("w+", encoding="utf-8") as _f:
