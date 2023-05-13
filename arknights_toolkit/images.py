@@ -3,14 +3,7 @@ from typing import Dict
 
 from loguru import logger
 from PIL import Image, ImageEnhance
-from . import __version__
-
-stub = Path(__file__).parent / "resource" / "ops_initialized"
-
-if not stub.exists() or stub.open('r', encoding='utf-8').read() != __version__:
-    logger.critical("Operator Resources has not initialized yet")
-    logger.warning("Please execute command: arkkit init")
-    exit(1)
+from . import need_init
 
 resource_path = Path(__file__).parent / "resource"
 gacha_path = resource_path / "gacha"
@@ -77,9 +70,11 @@ bottom_image: Image.Image = Image.open(record_path / "bottom.png")
 rainbow_image: Image.Image = Image.open(record_path / "rainbow.png")
 logger.debug("record base image loaded.")
 
-if not (resource_path / "ops_initialized").exists():
+if need_init():
+    import signal
     logger.critical("operator resources has not initialized yet")
-    exit()
+    logger.info("please execute `arkkit init` in your command line")
+    signal.raise_signal(signal.SIGINT)
 
 operators: Dict[str, Image.Image] = {
     path.stem: Image.open(path) for path in (resource_path / "operators").iterdir()

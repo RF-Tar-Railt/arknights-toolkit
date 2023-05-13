@@ -2,7 +2,8 @@ import json
 import re
 from io import BytesIO
 from pathlib import Path
-from typing import List
+from typing import List, Union
+from enum import IntEnum
 
 import httpx
 from loguru import logger
@@ -229,8 +230,13 @@ async def fetch_info(name: str, client: httpx.AsyncClient):
     career[name] = char
     logger.success(f"{name}({char}) info saved")
 
+class FetchFlag(IntEnum):
+    IMG = 2
+    REC = 1
 
-async def fetch(cover: bool = False, retry: int = 5):
+async def fetch(select: Union[int, FetchFlag] = 0b11, cover: bool = False, retry: int = 5):
+    if select < 1 or select > 3:
+        raise ValueError(select)
     async with httpx.AsyncClient(verify=False) as client:
         try:
             base = await client.get(
@@ -253,9 +259,9 @@ async def fetch(cover: bool = False, retry: int = 5):
             try:
                 if name not in career or cover:
                     await fetch_info(name, client)
-                if not (operate_path / f"{name}.png").exists() or cover:
+                if select & 0b10 and (not (operate_path / f"{name}.png").exists() or cover):
                     await fetch_image(name, client, retry)
-                if not (operate_path / f"profile_{name}.png").exists() or cover:
+                if select & 0b01 and (not (operate_path / f"profile_{name}.png").exists() or cover):
                     await fetch_profile_image(name, client, retry)
             except (httpx.TimeoutException, httpx.ConnectError) as e:
                 logger.error(f"failed to get {name}: {type(e)}({e})")

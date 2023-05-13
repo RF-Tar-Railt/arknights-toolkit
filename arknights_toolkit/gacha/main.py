@@ -46,7 +46,12 @@ class ArknightsGacha:
 
     async def update(self):
         """更新当前卡池"""
-        return await generate(self.file)
+        resp = await generate(self.file)
+        if resp.title != self.data['name']:
+            with self.file.open("r", encoding="UTF-8") as f_obj:
+                self.data = json.load(f_obj)
+            return resp
+        return
 
     def gacha(self, user: GachaUser, count: int = 1) -> List[List[Operator]]:
         """
