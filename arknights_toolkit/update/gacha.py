@@ -156,7 +156,7 @@ async def generate(file: Path):
     try:
         response = await update()
     except (TimeoutException, ConnectError) as e:
-        logger.warning(f"明日方舟 获取公告出错: {e}")
+        logger.warning(f"明日方舟 获取公告出错: {type(e)}({e})")
         return
     pool = {
         "name": response.title,

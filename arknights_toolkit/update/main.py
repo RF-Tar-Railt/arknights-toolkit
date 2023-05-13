@@ -194,7 +194,7 @@ async def fetch_profile_image(name: str, client: httpx.AsyncClient, retry: int):
 
 async def fetch_info(name: str, client: httpx.AsyncClient):
     logger.debug(f"handle info of {name} ...")
-    resp = await client.get(f"https://prts.wiki/index.php?title={name}&action=edit")
+    resp = await client.get(f"https://prts.wiki/index.php?title={name}&action=edit", timeout=20.0)
     root = etree.HTML(resp.text, etree.HTMLParser())
     sub = root.xpath('//textarea[@id="wpTextbox1"]')[0].text
     char = char_pat.search(sub)[1]
@@ -237,7 +237,7 @@ async def fetch(cover: bool = False, retry: int = 5):
                 "https://prts.wiki/w/PRTS:文件一览/干员精英0头像"
             )
         except Exception as e:
-            logger.error(f"failed to get base info: {e}")
+            logger.error(f"failed to get base info: {type(e)}({e})")
             return
         root = etree.HTML(base.text, etree.HTMLParser())
         imgs: List[etree._Element] = (
@@ -250,17 +250,16 @@ async def fetch(cover: bool = False, retry: int = 5):
             if alt.startswith("头像") and "(集成战略)" not in alt and "预备干员" not in alt:
                 names.append(alt[3:-4])
         for name in names:
-            if not cover and name in career:
+            try:
+                if name not in career or cover:
+                    await fetch_info(name, client)
+                if not (operate_path / f"{name}.png").exists() or cover:
+                    await fetch_image(name, client, retry)
+                if not (operate_path / f"profile_{name}.png").exists() or cover:
+                    await fetch_profile_image(name, client, retry)
+            except (httpx.TimeoutException, httpx.ConnectError) as e:
+                logger.error(f"failed to get {name}: {type(e)}({e})")
                 continue
-            await fetch_info(name, client)
-        for name in names:
-            if (operate_path / f"{name}.png").exists() and not cover:
-                continue
-            await fetch_image(name, client, retry)
-        for name in names:
-            if (operate_path / f"profile_{name}.png").exists() and not cover:
-                continue
-            await fetch_profile_image(name, client, retry)
 
     with (base_path / "careers.json").open("w+", encoding="utf-8") as _f:
         json.dump(career, _f, ensure_ascii=False, indent=2)
