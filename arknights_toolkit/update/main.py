@@ -32,9 +32,9 @@ if (base_path / "careers.json").exists():
 
 if (wordle_path / "relations.json").exists():
     with (wordle_path / "relations.json").open("r", encoding="utf-8") as f:
-        operators = json.load(f)
+        guess_relate = json.load(f)
 else:
-    operators = {
+    guess_relate = {
         "detail": "org_related 写的是目标->猜测的关系，目标为key",
         "org_related": {
             "汐斯塔": ["哥伦比亚", "黑钢国际", "莱茵生命"],
@@ -136,20 +136,21 @@ else:
             ],
         },
     }
-tables = operators.setdefault("table", {})
+tables = guess_relate.setdefault("table", {})
 
 async def fetch_image(name: str, client: httpx.AsyncClient, retry: int):
+    level = 2 if name == "阿米娅(近卫)" else 1
     _retry = retry
     while _retry:
         logger.debug(f"handle image of {name} ...")
         try:
             resp = await client.get(
-                f"https://prts.wiki/w/文件:半身像_{name}_1.png", timeout=20.0
+                f"https://prts.wiki/w/文件:半身像_{name}_{level}.png", timeout=20.0
             )
             if resp.status_code != 200:
                 raise RuntimeError(f"status code: {resp.status_code}")
             root = etree.HTML(resp.text)
-            sub = root.xpath(f'//img[@alt="文件:半身像 {name} 1.png"]')[0]
+            sub = root.xpath(f'//img[@alt="文件:半身像 {name} {level}.png"]')[0]
             avatar: Image.Image = Image.open(
                 BytesIO(
                     (
@@ -172,17 +173,25 @@ async def fetch_image(name: str, client: httpx.AsyncClient, retry: int):
         logger.error(f"failed to get image of {name} after {retry} retries")
 
 async def fetch_profile_image(name: str, client: httpx.AsyncClient, retry: int):
+
     _retry = retry
     while _retry:
         logger.debug(f"handle profile image of {name} ...")
         try:
             resp = await client.get(
-                f"https://prts.wiki/w/文件:头像_{name}.png", timeout=20.0
+                f"https://prts.wiki/w/文件:头像_{name}_2.png"
+                if name == "阿米娅(近卫)" else
+                f"https://prts.wiki/w/文件:头像_{name}.png",
+                timeout=20.0
             )
             if resp.status_code != 200:
                 raise RuntimeError(f"status code: {resp.status_code}")
             root = etree.HTML(resp.text)
-            sub = root.xpath(f'//img[@alt="文件:头像 {name}.png"]')[0]
+            sub = root.xpath(
+                f'//img[@alt="文件:头像 {name} 2.png"]'
+                if name == "阿米娅(近卫)" else
+                f'//img[@alt="文件:头像 {name}.png"]'
+            )[0]
             with (operate_path / f"profile_{name}.png").open("wb+") as img:
                 img.write(httpx.get(f"https://prts.wiki{sub.xpath('@src').pop()}").read())
             logger.success(f"{name} profile image saved")
@@ -270,5 +279,5 @@ async def fetch(select: Union[int, FetchFlag] = 0b11, cover: bool = False, retry
     with (base_path / "careers.json").open("w+", encoding="utf-8") as _f:
         json.dump(career, _f, ensure_ascii=False, indent=2)
     with (wordle_path / "relations.json").open("w+", encoding="utf-8") as _f:
-        json.dump(operators, _f, ensure_ascii=False, indent=2)
+        json.dump(guess_relate, _f, ensure_ascii=False, indent=2)
     logger.success("operator resources updated")
