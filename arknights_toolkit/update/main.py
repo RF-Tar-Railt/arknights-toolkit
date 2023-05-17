@@ -242,9 +242,10 @@ async def fetch_info(name: str, client: httpx.AsyncClient):
 class FetchFlag(IntEnum):
     IMG = 2
     REC = 1
+    NON = 0
 
 async def fetch(select: Union[int, FetchFlag] = 0b11, cover: bool = False, retry: int = 5):
-    if select < 1 or select > 3:
+    if select < 0 or select > 3:
         raise ValueError(select)
     async with httpx.AsyncClient(verify=False) as client:
         try:

@@ -3,7 +3,7 @@ from .gacha import ArknightsGacha, GachaUser
 from .random_operator import RandomOperator
 from .recruit import recruitment
 
-__version__ = "0.5.5"
+__version__ = "0.5.6"
 
 def need_init():
     file = Path(__file__).parent / "resource" / "ops_initialized"

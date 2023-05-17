@@ -11,7 +11,7 @@ class Init(BasePlugin):
     def init(self) -> Alconna | str:
         alc = Alconna(
             "init",
-            Option("--select|-S", Args["flag", SwitchPattern({"IMG": 2, "REC": 1})], action=append, help_text="选择特定的图片资源类型下载", compact=True),
+            Option("--select|-S", Args["flag", SwitchPattern({"IMG": 2, "REC": 1, "NON": 0})], action=append, help_text="选择特定的图片资源类型下载", compact=True),
             Option("--cover|-C", default=False, action=store_true, help_text="是否覆盖已有的资源文件"),
             meta=CommandMeta("初始化干员数据与图片资源")
         )
