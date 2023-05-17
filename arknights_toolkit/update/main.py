@@ -254,7 +254,7 @@ async def fetch(select: Union[int, FetchFlag] = 0b11, cover: bool = False, retry
             )
         except Exception as e:
             logger.error(f"failed to get base info: {type(e)}({e})")
-            return
+            return False
         root = etree.HTML(base.text, etree.HTMLParser())
         imgs: List[etree._Element] = (
             root.xpath('//div[@class="mw-parser-output"]')[0].getchildren()[0].getchildren()
@@ -282,3 +282,4 @@ async def fetch(select: Union[int, FetchFlag] = 0b11, cover: bool = False, retry
     with (wordle_path / "relations.json").open("w+", encoding="utf-8") as _f:
         json.dump(guess_relate, _f, ensure_ascii=False, indent=2)
     logger.success("operator resources updated")
+    return True

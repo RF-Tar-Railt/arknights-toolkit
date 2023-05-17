@@ -39,10 +39,17 @@ class ArknightsGacha:
         """
         self.five_per, self.four_per, self.three_per = 8, 50, 40
         self.file = Path(file) if isinstance(file, str) else file
+        def callback(_):
+            with self.file.open("r", encoding="UTF-8") as f_obj:
+                self.data = json.load(f_obj)
+
         if not self.file.exists():
-            asyncio.run(generate(self.file))
-        with self.file.open("r", encoding="UTF-8") as f_obj:
-            self.data = json.load(f_obj)
+            if not asyncio.events._get_running_loop():  # type: ignore
+                asyncio.run(generate(self.file))
+                callback(None)
+            else:
+                task = asyncio.create_task(generate(self.file), name="generate_gacha_data")
+                task.add_done_callback(callback)
 
     async def update(self):
         """更新当前卡池"""

@@ -77,7 +77,10 @@ class ArkRecord:
         else:
             self.pool_path = Path(pool_path)
             if not self.pool_path.exists():
-                asyncio.run(generate(self.pool_path))
+                if not asyncio.events._get_running_loop():  # type: ignore
+                    asyncio.run(generate(self.pool_path))
+                else:
+                    asyncio.create_task(generate(self.pool_path), name="generate_pool_info")
         self.database = ArkDatabase(db_path, max_char_count, max_pool_count)
 
     def user_token_save(self, player_token: str, user_session: str):
