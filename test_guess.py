@@ -6,4 +6,6 @@ while True:
     my_res = guess.guess(name, "aaa")
     print(guess.draw(my_res, simple=True))
     if my_res.state != "guessing":
+        print(my_res.select)
+        print(my_res.data)
         break

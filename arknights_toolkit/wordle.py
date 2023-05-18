@@ -3,10 +3,11 @@ import random
 from dataclasses import dataclass
 from io import BytesIO
 from pathlib import Path
-from typing import Dict, List, Literal, Optional, TypedDict, overload
+from typing import Dict, List, Literal, Optional, TypedDict, overload, Union
 from PIL import Image, ImageDraw, ImageFont
 
 from .images import sign, wordle_path
+from .update.main import fetch
 
 __all__ = ["Operator", "Guess", "GuessUnit", "OperatorWordle"]
 
@@ -41,30 +42,42 @@ class GuessUnit(TypedDict):
 class Guess:
     state: Literal["success", "guessing", "failed"]
     lines: List[GuessUnit]
-    select: GuessUnit
+    select: str
+    data: Operator
 
-
-with (wordle_path / "relations.json").open("r", encoding="utf-8") as f:
-    _data = json.load(f)
-    relations: Dict[str, List[str]] = _data["org_related"]
-    tables: Dict[str, Operator] = _data["table"]
 
 
 class OperatorWordle:
-    def __init__(self, path: str, max_guess: int = 8):
+    def __init__(self, path: str):
         self.base_dir = Path(path)
         self.base_dir.mkdir(parents=True, exist_ok=True)
         if not self.base_dir.is_dir():
             raise NotADirectoryError(path)
-        self.max_guess = max_guess
+        with (wordle_path / "relations.json").open("r", encoding="utf-8") as f:
+            _data = json.load(f)
+            self.relations: Dict[str, List[str]] = _data["org_related"]
+            self.tables: Dict[str, Operator] = _data["table"]
+
+    async def update(self):
+        await fetch(0)
+        with (wordle_path / "relations.json").open("r", encoding="utf-8") as f:
+            _data = json.load(f)
+            self.relations: Dict[str, List[str]] = _data["org_related"]
+            self.tables: Dict[str, Operator] = _data["table"]
 
     def restart(self, uid: str):
         data_path = self.base_dir / f"{uid}.json"
+        with data_path.open("r", encoding="utf-8") as _f:
+            sdata = json.load(_f)
+            selected_name = sdata["select_name"]
+            selected = sdata["select"]
+            old_res = sdata["units"]
         data_path.unlink(missing_ok=True)
+        return Guess("failed", old_res, selected_name, selected)
 
     def select(self, uid: str):
-        selected_name = random.choice(list(tables.keys()))
-        selected = tables[selected_name]
+        selected_name = random.choice(list(self.tables.keys()))
+        selected = self.tables[selected_name]
         with (self.base_dir / f"{uid}.json").open("w+", encoding="utf-8") as _f:
             json.dump(
                 {
@@ -79,7 +92,7 @@ class OperatorWordle:
             )
         return selected_name, selected
 
-    def guess(self, name: str, uid: str) -> Guess:
+    def guess(self, name: str, uid: str, max_guess: int = 8) -> Guess:
         data_path = self.base_dir / f"{uid}.json"
         if not data_path.exists():
             old_res = []
@@ -92,7 +105,7 @@ class OperatorWordle:
                 selected = sdata["select"]
                 old_res = sdata["units"]
                 select_time = sdata["select_time"]
-        if name not in tables:
+        if name not in self.tables:
             raise ValueError("干员不存在")
         res = {
             "rarity": "correct",
@@ -104,9 +117,9 @@ class OperatorWordle:
         }
         if name == selected_name:
             data_path.unlink()
-            return Guess("success", old_res + [res], selected)
+            return Guess("success", old_res + [res], selected_name, selected)
         select_time += 1
-        guess_op = tables[name]
+        guess_op = self.tables[name]
         if guess_op["rarity"] < selected["rarity"]:
             res["rarity"] = "up"
         elif guess_op["rarity"] > selected["rarity"]:
@@ -117,7 +130,7 @@ class OperatorWordle:
                     "relate", []
             ):
                 res["org"] = "relate"
-            elif guess_op["org"] in relations[selected["org"]]:
+            elif guess_op["org"] in self.relations[selected["org"]]:
                 res["org"] = "relate"
             else:
                 res["org"] = "wrong"
@@ -133,9 +146,9 @@ class OperatorWordle:
 
         if guess_op["artist"] != selected["artist"]:
             res["artist"] = "wrong"
-        if select_time >= self.max_guess:
+        if select_time >= max_guess:
             data_path.unlink()
-            return Guess("failed", old_res + [res], selected)
+            return Guess("failed", old_res + [res], selected_name, selected)
         with data_path.open("w+", encoding="utf-8") as _f:
             json.dump(
                 {
@@ -148,19 +161,19 @@ class OperatorWordle:
                 ensure_ascii=False,
                 indent=2,
             )
-        return Guess("guessing", old_res + [res], selected)
+        return Guess("guessing", old_res + [res], selected_name, selected)
 
     @overload
-    def draw(self, res: Guess) -> bytes:
+    def draw(self, res: Guess, max_guess: int = 8) -> bytes:
         ...
 
     @overload
-    def draw(self, res: Guess, simple: Literal[True]) -> str:
+    def draw(self, res: Guess, simple: Literal[True], max_guess: int = 8) -> str:
         ...
 
-    def draw(self, res: Guess, simple: bool = False):
+    def draw(self, res: Guess, simple: bool = False, max_guess: int = 8) -> Union[bytes, str]:
         if simple:
-            ans = f"干员猜猜乐 {len(res.lines)}/{self.max_guess}\n"
+            ans = f"干员猜猜乐 {len(res.lines)}/{max_guess}\n"
             for unit in res.lines:
                 ans += simple_sign[unit["rarity"]]
                 ans += simple_sign[unit["org"]]
@@ -217,7 +230,7 @@ class OperatorWordle:
         elif res.state == "success":
             text = f"成功了！这只神秘的干员是{res.select}！"
         else:
-            text = f"你有{len(res.lines)}/{self.max_guess}次机会猜测这只神秘干员，试试看！"
+            text = f"你有{len(res.lines)}/{max_guess}次机会猜测这只神秘干员，试试看！"
         width = font_base.getbbox(text)
         draw.text(
             ((600 - width[2]) // 2, 80 * (len(res.lines) + 1) + 30),
