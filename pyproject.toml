@@ -1,6 +1,5 @@
 [project]
 name = "arknights-toolkit"
-version = "0.5.6"
 description = "Arknights-related Toolkit"
 authors = [
     {name = "RF-Tar-Railt", email = "rf_tar_railt@qq.com"},
@@ -17,6 +16,7 @@ dependencies = [
 requires-python = ">=3.8"
 readme = "README.md"
 license = {text = "AGPL-3.0"}
+dynamic = ["version"]
 
 [project.urls]
 repository = "https://github.com/RF-Tar-Railt/arknigths-toolkit"
@@ -43,3 +43,7 @@ excludes = [
     "arknights_toolkit/resource/careers.json",
     "arknights_toolkit/resource/operators/*"
 ]
+
+[tool.pdm.version]
+source = "file"
+path = "arknights_toolkit/__init__.py"

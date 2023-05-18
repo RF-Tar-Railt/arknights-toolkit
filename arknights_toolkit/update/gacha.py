@@ -114,11 +114,28 @@ async def fetch(table: dict):
         )[0]
         tbody: etree._Element = _table.getchildren()[0]
         trs: List[etree._Element] = tbody.getchildren()
-        tds: List[etree._Element] = trs[1].getchildren()
-        link = f'https://prts.wiki{tds[0].find("a").get("href")}'
-        page = await client.get(link, timeout=30)
-        root1 = etree.HTML(page.text, etree.HTMLParser())
-        data = root1.xpath("//script[@id='data_operator']")[0].text.splitlines()
+        tds: List[etree._Element] = trs[2].getchildren()
+        href = tds[0].find("a").get("href")
+        link = f'https://prts.wiki{href}'
+        if href.count("/") == 3:
+            page = await client.get(link, timeout=30)
+            root1 = etree.HTML(page.text, etree.HTMLParser())
+            data = root1.xpath("//script[@id='data_operator']")[0].text.splitlines()
+        else:
+            page1 = await client.get(link, timeout=30)
+            root2 = etree.HTML(page1.text, etree.HTMLParser())
+            href1 = (
+                root2
+                .xpath("//div[@class='mw-parser-output']")[0]
+                .getchildren()[1]
+                .getchildren()[1]
+                .getchildren()[0]
+                .get("href")
+            )
+            link1 = f'https://prts.wiki{href1}'
+            page2 = await client.get(link1, timeout=30)
+            root3 = etree.HTML(page2.text, etree.HTMLParser())
+            data = root3.xpath("//script[@id='data_operator']")[0].text.splitlines()
 
         for opt in data[1:]:
             if not opt[0].isdigit():
