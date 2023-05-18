@@ -50,6 +50,8 @@ class ArknightsGacha:
             else:
                 task = asyncio.create_task(generate(self.file), name="generate_gacha_data")
                 task.add_done_callback(callback)
+        else:
+            callback(None)
 
     async def update(self):
         """更新当前卡池"""

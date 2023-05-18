@@ -73,7 +73,7 @@ logger.debug("record base image loaded.")
 if need_init():
     import signal
     logger.critical("operator resources has not initialized yet")
-    logger.info("please execute `arkkit init` in your command line")
+    logger.error("please execute `arkkit init` in your command line")
     signal.raise_signal(signal.SIGINT)
 
 operators: Dict[str, Image.Image] = {
