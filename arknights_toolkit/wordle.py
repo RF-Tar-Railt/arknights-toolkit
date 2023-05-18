@@ -41,7 +41,7 @@ class GuessUnit(TypedDict):
 class Guess:
     state: Literal["success", "guessing", "failed"]
     lines: List[GuessUnit]
-    select: str
+    select: GuessUnit
 
 
 with (wordle_path / "relations.json").open("r", encoding="utf-8") as f:
@@ -104,7 +104,7 @@ class OperatorWordle:
         }
         if name == selected_name:
             data_path.unlink()
-            return Guess("success", old_res + [res], selected_name)
+            return Guess("success", old_res + [res], selected)
         select_time += 1
         guess_op = tables[name]
         if guess_op["rarity"] < selected["rarity"]:
@@ -135,7 +135,7 @@ class OperatorWordle:
             res["artist"] = "wrong"
         if select_time >= self.max_guess:
             data_path.unlink()
-            return Guess("failed", old_res + [res], selected_name)
+            return Guess("failed", old_res + [res], selected)
         with data_path.open("w+", encoding="utf-8") as _f:
             json.dump(
                 {
@@ -148,7 +148,7 @@ class OperatorWordle:
                 ensure_ascii=False,
                 indent=2,
             )
-        return Guess("guessing", old_res + [res], selected_name)
+        return Guess("guessing", old_res + [res], selected)
 
     @overload
     def draw(self, res: Guess) -> bytes:
