@@ -127,8 +127,8 @@ class ArkDatabase:
     def get_record_count(self, player_uid: int):
         """获取有效记录数量"""
         self.cursor.execute(
-            "select count(*) from {self.config['record_table']} "
-            "where {self.config['player_uid_field']} = ?",
+            f"select count(*) from {self.config['record_table']} "
+            f"where {self.config['player_uid_field']} = ?",
             (player_uid, )
         )
         return self.cursor.fetchone()[0]
@@ -156,9 +156,9 @@ class ArkDatabase:
                 f"create view v{player_uid} as "
                 f"select * "
                 f"from {self.config['record_table']} "
-                f"where {self.config['player_uid_field']} = :uid "
+                f"where {self.config['player_uid_field']} = '{player_uid}' "
                 f"order by {self.config['timestamp_field']} desc "
-                f"limit :mcount ;"
+                f"limit {max_record_count};"
             )
             # logger.info(create_view_sql)
         else:  # 旧版单卡池查询用
@@ -166,18 +166,11 @@ class ArkDatabase:
                 f"create view v{player_uid} as "
                 f"select * "
                 f"from {self.config['record_field']} "
-                f"where {self.config['player_uid_field']} = :uid "
-                f"and {self.config['pool_name_field']} = :pool "
-                f"limit :mcount ;"
+                f"where {self.config['player_uid_field']} = '{player_uid}' "
+                f"and {self.config['pool_name_field']} = '{target_pool}' "
+                f"limit {max_record_count};"
             )
-        self.cursor.execute(
-            create_view_sql,
-            {
-                "uid": str(player_uid),
-                "pool": target_pool,
-                "mcount": max_record_count
-            }
-        )
+        self.cursor.execute(create_view_sql)
         return max_record_count
 
     def finish(self, player_uid: int):
@@ -370,9 +363,6 @@ class ArkDatabase:
         """
         response = get_player_uid(token)
         try:
-            sql = (
-
-            )
             self.cursor.execute(
                 f"replace into {self.config['user_table']}"
                 f"("
@@ -383,7 +373,7 @@ class ArkDatabase:
                 f"{self.config['channel_field']}"
                 f")"
                 f"values (?, ?, ?, ?, ?);",
-                (user_session, {response['uid']}, {response['name']}, {token}, {response['channelMasterId']})
+                (user_session, response['uid'], response['name'], token, response['channelMasterId'])
             )
             self.db.commit()
             return

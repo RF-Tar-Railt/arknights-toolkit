@@ -45,6 +45,9 @@ async def generate(file: Path):
         "专属推荐干员": {
             "is_exclusive": True
         },
+        "中坚寻访": {
+            "is_exclusive": True
+        },
     }
     if file.exists():
         with file.open("r", encoding="utf-8") as fj:

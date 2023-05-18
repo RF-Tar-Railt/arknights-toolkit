@@ -263,7 +263,7 @@ class CharImage(BaseImage):
             char_star (int): 干员星级
 
         """
-        key = f"{char_name}_{char_star}"
+        key = f"profile_{char_name}"
         if key in operators:
             char_profile0 = operators[key]
         elif (file := Path(__file__).parent.parent / "resource" / "operators" / f"{key}.png").exists():
