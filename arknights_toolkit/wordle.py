@@ -20,6 +20,7 @@ font_base = ImageFont.truetype(
     20
 )
 
+
 class Operator(TypedDict):
     rarity: int
     org: str
@@ -46,7 +47,6 @@ class Guess:
     data: Operator
 
 
-
 class OperatorWordle:
     def __init__(self, path: str):
         self.base_dir = Path(path)
@@ -67,13 +67,14 @@ class OperatorWordle:
 
     def restart(self, uid: str):
         data_path = self.base_dir / f"{uid}.json"
-        with data_path.open("r", encoding="utf-8") as _f:
-            sdata = json.load(_f)
-            selected_name = sdata["select_name"]
-            selected = sdata["select"]
-            old_res = sdata["units"]
-        data_path.unlink(missing_ok=True)
-        return Guess("failed", old_res, selected_name, selected)
+        if data_path.exists():
+            with data_path.open("r", encoding="utf-8") as _f:
+                sdata = json.load(_f)
+                selected_name = sdata["select_name"]
+                selected = sdata["select"]
+                old_res = sdata["units"]
+            data_path.unlink(missing_ok=True)
+            return Guess("failed", old_res, selected_name, selected)
 
     def select(self, uid: str):
         selected_name = random.choice(list(self.tables.keys()))
