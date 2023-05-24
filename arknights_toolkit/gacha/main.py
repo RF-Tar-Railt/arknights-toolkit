@@ -39,6 +39,8 @@ class ArknightsGacha:
         """
         self.five_per, self.four_per, self.three_per = 8, 50, 40
         self.file = Path(file) if isinstance(file, str) else file
+        self.data = {}  # type: ignore
+
         def callback(_):
             with self.file.open("r", encoding="UTF-8") as f_obj:
                 self.data = json.load(f_obj)
