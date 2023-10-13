@@ -4,7 +4,7 @@ from .gacha import ArknightsGacha, GachaUser
 from .random_operator import RandomOperator
 from .recruit import recruitment
 
-__version__ = "0.5.12"
+__version__ = "0.6.0"
 
 
 def need_init():
