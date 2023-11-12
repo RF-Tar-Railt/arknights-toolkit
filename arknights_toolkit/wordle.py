@@ -5,9 +5,10 @@ from io import BytesIO
 from pathlib import Path
 from typing import Dict, List, Literal, Optional, TypedDict, Union, overload
 
+from httpx._types import ProxiesTypes
 from PIL import Image, ImageDraw, ImageFont
 
-from .images import sign, wordle_path
+from .images import sign, resource_path
 from .update.main import fetch
 
 __all__ = ["Operator", "Guess", "GuessUnit", "OperatorWordle"]
@@ -56,14 +57,14 @@ class OperatorWordle:
         self.base_dir.mkdir(parents=True, exist_ok=True)
         if not self.base_dir.is_dir():
             raise NotADirectoryError(path)
-        with (wordle_path / "relations.json").open("r", encoding="utf-8") as f:
+        with (resource_path / "info.json").open("r", encoding="utf-8") as f:
             _data = json.load(f)
             self.relations: Dict[str, List[str]] = _data["org_related"]
             self.tables: Dict[str, Operator] = _data["table"]
 
-    async def update(self):
-        await fetch(0)
-        with (wordle_path / "relations.json").open("r", encoding="utf-8") as f:
+    async def update(self, proxy: Optional[ProxiesTypes] = None):
+        await fetch(0, proxy=proxy)
+        with (resource_path / "info.json").open("r", encoding="utf-8") as f:
             _data = json.load(f)
             self.relations: Dict[str, List[str]] = _data["org_related"]
             self.tables: Dict[str, Operator] = _data["table"]

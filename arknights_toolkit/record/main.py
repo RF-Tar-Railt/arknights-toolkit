@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Optional, Tuple
 
 import httpx
+from httpx._types import ProxiesTypes
 
 from ..update.record import generate
 from .database import ArkDatabase
@@ -13,12 +14,13 @@ from .drawer import ArkImage
 from .style import get_img_wh
 
 
-async def url_scrawler(token: str, channel: int) -> Tuple[str, list]:
+async def url_scrawler(token: str, channel: int, proxy: Optional[ProxiesTypes] = None) -> Tuple[str, list]:
     """_summary_
     爬取官网抽卡记录
     Args:
         token (str): token
         channel: 用户官服/B服判据。官服为1，B服为2
+        proxy: 代理
     Returns:
         _type_: _description_
     """
@@ -33,7 +35,7 @@ async def url_scrawler(token: str, channel: int) -> Tuple[str, list]:
         "Language/zh_CN webview/0"
     )
     headers = {"User-Agent": user_agent}
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(proxies=proxy) as client:
         try:
             for i in range(1, 11):
                 _data = await client.get(
@@ -59,6 +61,7 @@ class ArkRecord:
         db_path: Optional[str] = None,
         max_char_count: int = 20,
         max_pool_count: int = 8,
+        proxy: Optional[ProxiesTypes] = None,
     ):
         """
         明日方舟抽卡数据分析
@@ -67,7 +70,9 @@ class ArkRecord:
         :param db_path: 数据文件目录，默认为用户路径
         :param max_char_count: 最多展示的干员
         :param max_pool_count: 最多展示的卡池
+        :param proxy: 代理
         """
+        self.proxy = proxy
         self.save_dir = Path(save_dir)
         self.save_dir.mkdir(parents=True, exist_ok=True)
         if not self.save_dir.is_dir():
@@ -80,10 +85,10 @@ class ArkRecord:
             self.pool_path = Path(pool_path)
             if not self.pool_path.exists():
                 if not asyncio.events._get_running_loop():  # type: ignore
-                    asyncio.run(generate(self.pool_path))
+                    asyncio.run(generate(self.pool_path, self.proxy))
                 else:
                     asyncio.create_task(
-                        generate(self.pool_path), name="generate_pool_info"
+                        generate(self.pool_path, self.proxy), name="generate_pool_info"
                     )
         self.database = ArkDatabase(db_path, max_char_count, max_pool_count)
 
@@ -129,7 +134,7 @@ class ArkRecord:
         player_info = self.database.read_token_from_db(user_session)
         player_name, player_uid, token, channel = player_info
         # 获取官网寻访记录
-        warning_info, record_info_list = await url_scrawler(token, channel)
+        warning_info, record_info_list = await url_scrawler(token, channel, self.proxy)
         with self.pool_path.open("r", encoding="utf-8") as f:
             private_tot_pool_info = json.load(f)
 

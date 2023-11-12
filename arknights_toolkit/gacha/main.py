@@ -49,16 +49,17 @@ class ArknightsGacha:
         self.proxy = proxy
 
         def callback(_):
-            with self.file.open("r", encoding="UTF-8") as f_obj:
-                self.data = json.load(f_obj)
+            if self.file.exists():
+                with self.file.open("r+", encoding="UTF-8") as f_obj:
+                    self.data = json.load(f_obj)
 
         if not self.file.exists():
             if not asyncio.events._get_running_loop():  # type: ignore
-                asyncio.run(generate(self.file))
+                asyncio.run(generate(self.file, proxy=self.proxy))
                 callback(None)
             else:
                 task = asyncio.create_task(
-                    generate(self.file), name="generate_gacha_data"
+                    generate(self.file, proxy=self.proxy), name="generate_gacha_data"
                 )
                 task.add_done_callback(callback)
         else:

@@ -22,20 +22,13 @@ org_pat1 = re.compile(r"\|所属组织=([^|]+?)\n\|.+?")
 org_pat2 = re.compile(r"\|所属团队=([^|]+?)\n\|.+?")
 art_pat = re.compile(r"\|画师=([^|]+?)\n\|.+?")
 
-career = {}
 base_path = Path(__file__).parent.parent / "resource"
 operate_path = base_path / "operators"
 operate_path.mkdir(parents=True, exist_ok=True)
-wordle_path = base_path / "wordle"
-if (base_path / "careers.json").exists():
-    with (base_path / "careers.json").open("r", encoding="utf-8") as f:
-        career.update(json.load(f))
+info_path = base_path / "info.json"
 
-if (wordle_path / "relations.json").exists():
-    with (wordle_path / "relations.json").open("r", encoding="utf-8") as f:
-        guess_relate = json.load(f)
-else:
-    guess_relate = {
+if not info_path.exists():
+    infos = {
         "detail": "org_related 写的是目标->猜测的关系，目标为key",
         "org_related": {
             "汐斯塔": ["哥伦比亚", "黑钢国际", "莱茵生命"],
@@ -136,8 +129,10 @@ else:
                 "罗德岛-精英干员",
             ],
         },
+        "table": {}
     }
-tables = guess_relate.setdefault("table", {})
+    with info_path.open("w+", encoding="utf-8") as f:
+        json.dump(infos, f, ensure_ascii=False, indent=2)
 
 
 async def fetch_image(name: str, client: httpx.AsyncClient, retry: int):
@@ -234,15 +229,14 @@ async def fetch_info(name: str, client: httpx.AsyncClient):
     org = org3 or org2 or org1
     org = org or "/"
     art = art_pat.search(sub)[1]
-    tables[name] = {
+    logger.success(f"{name}({char}) info fetched")
+    return {
         "rarity": int(rarity),
         "org": org,
         "career": f"{char}-{sub_char}",
         "race": race,
         "artist": art,
     }
-    career[name] = char
-    logger.success(f"{name}({char}) info saved")
 
 
 class FetchFlag(IntEnum):
@@ -259,6 +253,9 @@ async def fetch(
 ):
     if select < 0 or select > 3:
         raise ValueError(select)
+    with info_path.open("r+", encoding="utf-8") as _f:
+        _infos = json.load(_f)
+    tables = _infos.setdefault("table", {})
     async with httpx.AsyncClient(verify=False, proxies=proxy) as client:
         try:
             base = await client.get("https://prts.wiki/w/PRTS:文件一览/干员精英0头像")
@@ -279,8 +276,8 @@ async def fetch(
                 names.append(alt[3:-4])
         for name in names:
             try:
-                if name not in career or cover:
-                    await fetch_info(name, client)
+                if name not in tables or cover:
+                    tables[name] = await fetch_info(name, client)
                 if select & 0b10 and (
                     not (operate_path / f"{name}.png").exists() or cover
                 ):
@@ -293,9 +290,7 @@ async def fetch(
                 logger.error(f"拉取 {name} 失败: {type(e)}({e})\n请检查网络或代理设置")
                 continue
 
-    with (base_path / "careers.json").open("w+", encoding="utf-8") as _f:
-        json.dump(career, _f, ensure_ascii=False, indent=2)
-    with (wordle_path / "relations.json").open("w+", encoding="utf-8") as _f:
-        json.dump(guess_relate, _f, ensure_ascii=False, indent=2)
+    with info_path.open("w+", encoding="utf-8") as _f:
+        json.dump(_infos, _f, ensure_ascii=False, indent=2)
     logger.success("operator resources updated")
     return True

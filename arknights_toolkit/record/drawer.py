@@ -272,7 +272,8 @@ class CharImage(BaseImage):
             / "operators"
             / f"{key}.png"
         ).exists():
-            char_profile0 = operators[key] = Image.open(file)
+            char_profile0 = Image.open(file)
+            operators[key] = char_profile0
         else:
             char_profile0 = Image.open(resource_path / "profile_海猫.png")
         # 重塑大小
