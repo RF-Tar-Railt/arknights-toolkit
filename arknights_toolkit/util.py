@@ -1,5 +1,5 @@
 import random
-from typing import List, TypeVar, Iterable
+from typing import Iterable, List, TypeVar
 
 T = TypeVar("T")
 

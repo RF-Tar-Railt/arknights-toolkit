@@ -3,7 +3,8 @@ import random
 from dataclasses import dataclass
 from io import BytesIO
 from pathlib import Path
-from typing import Dict, List, Literal, Optional, TypedDict, overload, Union
+from typing import Dict, List, Literal, Optional, TypedDict, Union, overload
+
 from PIL import Image, ImageDraw, ImageFont
 
 from .images import sign, wordle_path
@@ -16,8 +17,10 @@ simple_sign = {"correct": "🟩", "down": "🟦", "up": "🟦", "wrong": "🟥",
 state = Literal["correct", "down", "up", "wrong", "relate"]
 
 font_base = ImageFont.truetype(
-    str((Path(__file__).parent / "resource" / "HarmonyOS_Sans_SC_Medium.ttf").absolute()),
-    20
+    str(
+        (Path(__file__).parent / "resource" / "HarmonyOS_Sans_SC_Medium.ttf").absolute()
+    ),
+    20,
 )
 
 
@@ -128,7 +131,7 @@ class OperatorWordle:
 
         if guess_op["org"] != selected["org"]:
             if selected_name in guess_op.get("relate", []) or name in selected.get(
-                    "relate", []
+                "relate", []
             ):
                 res["org"] = "relate"
             elif guess_op["org"] in self.relations[selected["org"]]:
@@ -172,7 +175,9 @@ class OperatorWordle:
     def draw(self, res: Guess, simple: Literal[True], max_guess: int = 8) -> str:
         ...
 
-    def draw(self, res: Guess, simple: bool = False, max_guess: int = 8) -> Union[bytes, str]:
+    def draw(
+        self, res: Guess, simple: bool = False, max_guess: int = 8
+    ) -> Union[bytes, str]:
         if simple:
             ans = f"干员猜猜乐 {len(res.lines)}/{max_guess}\n"
             for unit in res.lines:

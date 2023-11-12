@@ -2,35 +2,40 @@ import json
 import random
 import re
 from io import BytesIO
-from typing import List
+from typing import List, Optional
 
 import httpx
+from httpx._types import ProxiesTypes
 from lxml import etree
 from PIL import ImageDraw, ImageFont
 
-from .model import Operator
-from ..update.main import fetch_image
 from ..images import *
+from ..update.main import fetch_image
+from .model import Operator
 
 resource_path = Path(__file__).parent.parent / "resource"
 char_pat = re.compile(r"\|职业=(.+?)\n\|.+?")
 with (resource_path / "careers.json").open("r", encoding="utf-8") as f:
     careers = json.load(f)
 
-font_base = ImageFont.truetype(str((resource_path / "HarmonyOS_Sans_SC_Medium.ttf").absolute()), 32)
+font_base = ImageFont.truetype(
+    str((resource_path / "HarmonyOS_Sans_SC_Medium.ttf").absolute()), 32
+)
 
-async def simulate_image(ops: List[Operator]):
+
+async def simulate_image(ops: List[Operator], proxy: Optional[ProxiesTypes] = None):
     """
     依据抽卡结果生成模拟十连图片
 
     :param ops: 抽卡结果
+    :param proxy: 代理
     :return: 图片的bytes
     """
     base = 20
     offset = 124
     l_offset = 14
     back_img = Image.open(resource_path / "gacha" / "back_image.png")
-    async with httpx.AsyncClient() as async_httpx:
+    async with httpx.AsyncClient(verify=False, proxies=proxy) as async_httpx:
         for op in ops[:10]:
             name = op.name
             rarity = op.rarity - 1
@@ -53,7 +58,9 @@ async def simulate_image(ops: List[Operator]):
                     logo: Image.Image = characters[cr].resize(
                         (96, 96), Image.Resampling.LANCZOS
                     )
-                    with (resource_path / "careers.json").open("w", encoding="utf-8") as jf:
+                    with (resource_path / "careers.json").open(
+                        "w", encoding="utf-8"
+                    ) as jf:
                         careers[name] = cr
                         json.dump(careers, jf, ensure_ascii=False)
             except (ValueError, IndexError, httpx.TimeoutException, httpx.ConnectError):
@@ -64,7 +71,7 @@ async def simulate_image(ops: List[Operator]):
                     Path(__file__).parent.parent / "resource" / "gacha" / "半身像_无_1.png"
                 ).resize((offset, 360), Image.Resampling.LANCZOS)
                 _draw = ImageDraw.Draw(avatar)
-                _draw.text((46, 100), '\n'.join(name), fill="white", font=font_base)
+                _draw.text((46, 100), "\n".join(name), fill="white", font=font_base)
             s_size = stars[rarity].size
             star = stars[rarity].resize(
                 (int(s_size[0] * 0.6), int(47 * 0.6)), Image.Resampling.LANCZOS

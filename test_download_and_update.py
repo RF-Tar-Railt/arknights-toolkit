@@ -6,7 +6,7 @@ import asyncio
 
 async def main():
     # await fetch(cover=False)
-    await generate(Path("exam_pool.json"))
+    await generate(Path("exam_pool.json"), proxy="http://127.0.0.1:7890")
 
 
 asyncio.run(main())

@@ -1,19 +1,19 @@
 import json
+import platform
+import shutil
 import sqlite3 as sq
 import time
-from pathlib import Path
-import platform
-from typing import Optional, TypedDict, Callable, Any, Tuple
-import shutil
-import httpx
 import urllib
-import xlsxwriter as xlw
+from pathlib import Path
+from typing import Any, Callable, Optional, Tuple, TypedDict
+
+import httpx
 from loguru import logger
 
 """ 
 读写数据库
 """
-__all__ = ["get_player_uid", "write2xlsx", "ArkDatabase"]
+__all__ = ["get_player_uid", "ArkDatabase"]
 
 
 def get_player_uid(token: str):
@@ -42,19 +42,6 @@ def get_player_uid(token: str):
         logger.error(e)
         raise RuntimeError("无效token") from e
     return user_info
-
-
-def write2xlsx(file_path: Path, headers: list, info: list):
-    wb = xlw.Workbook(str(file_path.absolute()))
-    ws = wb.add_worksheet()
-    # 写第一行
-    row, col = 0, 0
-    ws.write_row(0, 0, headers)
-    row += 1
-    for item in info:
-        ws.write_row(row, 0, item)
-        row += 1
-    wb.close()
 
 
 class QueryParameter(TypedDict):
@@ -103,7 +90,6 @@ class ArkDatabase:
             "player_name_field": "player_name",
             "token_field": "token",
             "channel_field": "channel",
-
             "record_table": "record",
             "record_id_field": "record_id",
             "pool_name_field": "pool_name",
@@ -121,7 +107,9 @@ class ArkDatabase:
 
     def get_pool_in_view(self, player_uid: int):
         """获取视图中包含的卡池"""
-        self.cursor.execute(f"select distinct {self.config['exclusive_field']} from v{player_uid}")
+        self.cursor.execute(
+            f"select distinct {self.config['exclusive_field']} from v{player_uid}"
+        )
         return [item[0] for item in self.cursor.fetchall()]
 
     def get_record_count(self, player_uid: int):
@@ -129,7 +117,7 @@ class ArkDatabase:
         self.cursor.execute(
             f"select count(*) from {self.config['record_table']} "
             f"where {self.config['player_uid_field']} = ?",
-            (player_uid, )
+            (player_uid,),
         )
         return self.cursor.fetchone()[0]
 
@@ -273,7 +261,7 @@ class ArkDatabase:
                 f"{self.config['pool_name_field']}, {self.config['record_id_field']} "
                 f"from v{player_uid} where {self.config['exclusive_field']} = ? "
                 f"order by {self.config['record_id_field']} desc",
-                (pool,)
+                (pool,),
             )
             char_info_lst = list(self.cursor.fetchall())
             last_mark_idx = 1e20  # 上一次获得六星时的序号
@@ -329,7 +317,7 @@ class ArkDatabase:
                 f"{self.config['star_field']}, {self.config['record_id_field']} "
                 f"from v{player_uid} where {self.config['exclusive_field']} = ? "
                 f"order by {self.config['record_id_field']} desc",
-                (pool,)
+                (pool,),
             )
             char_info_lst = list(self.cursor.fetchall())
             for i, char in enumerate(char_info_lst):
@@ -348,7 +336,7 @@ class ArkDatabase:
             f"select {self.config['char_name_field']}, count(*) "
             f"from v{player_uid} group by {self.config['char_name_field']} "
             f"order by count(*) desc limit ?",
-            (limit,)
+            (limit,),
         )
         fre_info = self.cursor.fetchall()
         tmp_lst = []
@@ -373,31 +361,18 @@ class ArkDatabase:
                 f"{self.config['channel_field']}"
                 f")"
                 f"values (?, ?, ?, ?, ?);",
-                (user_session, response['uid'], response['name'], token, response['channelMasterId'])
+                (
+                    user_session,
+                    response["uid"],
+                    response["name"],
+                    token,
+                    response["channelMasterId"],
+                ),
             )
             self.db.commit()
             return
         except Exception as e:
             raise RuntimeError("保存token失败") from e
-
-    def export_record2file(
-        self,
-        player_uid: int,
-        player_name: str,
-        user_session: str,
-        output_csv_dir: Path,
-    ):
-        try:
-            self.check_view(player_uid)
-            self.create_view("all", player_uid, -1)
-            res = self.export_query(player_uid)
-            headers = ["寻访编号", "uid", "卡池", "干员", "星级", "是否为新干员", "寻访时间", "限定类型"]
-            out_file_name = f"ark_record_{user_session}_{player_name}.xlsx"
-            out_file_path = output_csv_dir / out_file_name
-            write2xlsx(out_file_path, headers, res)
-            return out_file_path
-        except Exception as e:
-            raise RuntimeError(f"获取/导出记录失败 {str(e)}") from e
 
     def read_token_from_db(self, user_session: str) -> Tuple[str, str, str, int]:
         """
@@ -410,7 +385,7 @@ class ArkDatabase:
             self.cursor.execute(
                 f"select * from {self.config['user_table']} "
                 f"where {self.config['user_session_field']} = ?;",
-                (user_session, )
+                (user_session,),
             )
             # user_name token user_id channel
             res = self.cursor.fetchone()[1:]

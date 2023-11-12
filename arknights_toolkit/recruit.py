@@ -1,9 +1,11 @@
 from dataclasses import dataclass
 from typing import List
+
 from msgpack import dumps
 
+
 def encode_to_base58(input_: List[int]):
-    alphabet = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
+    alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
     length = len(alphabet)
     flag = 0
     leading_zero = 0
@@ -23,8 +25,7 @@ def encode_to_base58(input_: List[int]):
 
     len_ = leading_zero + len(encoding)
     values = [
-        alphabet[0 if i < leading_zero else encoding[len_ - i - 1]]
-        for i in range(len_)
+        alphabet[0 if i < leading_zero else encoding[len_ - i - 1]] for i in range(len_)
     ]
     return "".join(values)
 
@@ -64,13 +65,14 @@ TAG = [
 
 ALL = PROFESSION + POSITION + RARITY + TAG
 
-PROFESSION_INDEX = len(PROFESSION) + len(POSITION) + len(RARITY) + len(TAG) -1
+PROFESSION_INDEX = len(PROFESSION) + len(POSITION) + len(RARITY) + len(TAG) - 1
 
 POSITION_INDEX = len(POSITION) + len(RARITY) + len(TAG) - 1
 
 RARITY_INDEX = len(RARITY) + len(TAG) - 1
 
 TAG_INDEX = len(TAG) - 1
+
 
 @dataclass
 class Source:
@@ -91,10 +93,10 @@ class BitMap:
         return self.value & (1 << index)
 
     def set(self, index: int):
-        self.value |= (1 << index)
+        self.value |= 1 << index
 
     def clear(self, index: int):
-        self.value ^= (1 << index)
+        self.value ^= 1 << index
 
     def range(self, lower: int, upper: int):
         mask = (1 << (upper + 1)) - 1 - ((1 << (lower + 1)) - 1)
@@ -104,7 +106,7 @@ class BitMap:
         res = 0
         tmp = self.value
         while tmp:
-            tmp &= (tmp - 1)
+            tmp &= tmp - 1
             res += 1
         return res
 
@@ -126,11 +128,12 @@ class BitMap:
         while index.value < (1 << len(indices)):
             tmp = 0
             for i in index.get_indict():
-                tmp |= (1 << indices[i])
+                tmp |= 1 << indices[i]
             if tmp:
                 result.append(tmp)
             index.value += 1
         return result
+
 
 class Char:
     def __init__(self, i: int = 0):
@@ -163,7 +166,9 @@ class Char:
                 self.bitmap.clear(PROFESSION_INDEX - index)
 
     def is_profession_empty(self):
-        return not self.bitmap.range(PROFESSION_INDEX - len(PROFESSION) , PROFESSION_INDEX)
+        return not self.bitmap.range(
+            PROFESSION_INDEX - len(PROFESSION), PROFESSION_INDEX
+        )
 
     def select_all_position(self):
         for index, val in enumerate(POSITION):
@@ -175,7 +180,7 @@ class Char:
                 self.bitmap.clear(POSITION_INDEX - index)
 
     def is_position_empty(self):
-        return not self.bitmap.range(POSITION_INDEX - len(POSITION) , POSITION_INDEX)
+        return not self.bitmap.range(POSITION_INDEX - len(POSITION), POSITION_INDEX)
 
     def select_all_rarity(self):
         for index, val in enumerate(RARITY):
@@ -187,7 +192,7 @@ class Char:
                 self.bitmap.clear(RARITY_INDEX - index)
 
     def is_rarity_empty(self):
-        return not self.bitmap.range(RARITY_INDEX - len(RARITY) , RARITY_INDEX)
+        return not self.bitmap.range(RARITY_INDEX - len(RARITY), RARITY_INDEX)
 
     def select_all_tag(self):
         for index, val in enumerate(TAG):
@@ -199,13 +204,17 @@ class Char:
                 self.bitmap.clear(TAG_INDEX - index)
 
     def is_tag_empty(self):
-        return not self.bitmap.range(TAG_INDEX - len(TAG) , TAG_INDEX)
+        return not self.bitmap.range(TAG_INDEX - len(TAG), TAG_INDEX)
 
     def dump(self):
-        profession_state = self.bitmap.range(PROFESSION_INDEX - len(PROFESSION) , PROFESSION_INDEX)
-        position_state = self.bitmap.range(POSITION_INDEX - len(POSITION) , POSITION_INDEX)
-        rarity_state = self.bitmap.range(RARITY_INDEX - len(RARITY) , RARITY_INDEX)
-        tag_state = self.bitmap.range(TAG_INDEX - len(TAG) , TAG_INDEX)
+        profession_state = self.bitmap.range(
+            PROFESSION_INDEX - len(PROFESSION), PROFESSION_INDEX
+        )
+        position_state = self.bitmap.range(
+            POSITION_INDEX - len(POSITION), POSITION_INDEX
+        )
+        rarity_state = self.bitmap.range(RARITY_INDEX - len(RARITY), RARITY_INDEX)
+        tag_state = self.bitmap.range(TAG_INDEX - len(TAG), TAG_INDEX)
         payload = {
             "profession": profession_state >> (len(POSITION) + len(RARITY) + len(TAG)),
             "position": position_state >> (len(RARITY) + len(TAG)),
@@ -219,6 +228,7 @@ class Char:
         "高资": "高级资深干员",
         "资深": "资深干员",
     }
+
 
 def recruitment(tags: List[str]):
     char = Char()

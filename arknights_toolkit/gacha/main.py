@@ -1,26 +1,32 @@
+import asyncio
 import itertools
 import json
 import math
 import random
 from io import BytesIO
 from pathlib import Path
-from typing import List, Union
-import asyncio
+from typing import List, Optional, Union
 
+from httpx._types import ProxiesTypes
 from PIL import Image, ImageDraw, ImageFont
 
-from ..util import random_pick_big
 from ..update.gacha import generate
+from ..util import random_pick_big
 from .model import GachaData, GachaUser, Operator
 
 font_base = ImageFont.truetype(
-    str((Path(__file__).parent.parent / "resource" / "HarmonyOS_Sans_SC_Medium.ttf").absolute()),
-    16
+    str(
+        (
+            Path(__file__).parent.parent / "resource" / "HarmonyOS_Sans_SC_Medium.ttf"
+        ).absolute()
+    ),
+    16,
 )
 
 
 class ArknightsGacha:
     """抽卡模拟器"""
+
     five_per: int
     four_per: int
     three_per: int
@@ -33,13 +39,14 @@ class ArknightsGacha:
         3: (0x09, 0xB3, 0xF7),  # 09b3f7
     }
 
-    def __init__(self, file:Union[str, Path]):
+    def __init__(self, file: Union[str, Path], proxy: Optional[ProxiesTypes] = None):
         """
         :param file: 卡池信息文件
         """
         self.five_per, self.four_per, self.three_per = 8, 50, 40
         self.file = Path(file) if isinstance(file, str) else file
         self.data = {}  # type: ignore
+        self.proxy = proxy
 
         def callback(_):
             with self.file.open("r", encoding="UTF-8") as f_obj:
@@ -50,15 +57,17 @@ class ArknightsGacha:
                 asyncio.run(generate(self.file))
                 callback(None)
             else:
-                task = asyncio.create_task(generate(self.file), name="generate_gacha_data")
+                task = asyncio.create_task(
+                    generate(self.file), name="generate_gacha_data"
+                )
                 task.add_done_callback(callback)
         else:
             callback(None)
 
     async def update(self):
         """更新当前卡池"""
-        resp = await generate(self.file)
-        if resp and resp.title != self.data['name']:
+        resp = await generate(self.file, self.proxy)
+        if resp and resp.title != self.data["name"]:
             with self.file.open("r", encoding="UTF-8") as f_obj:
                 self.data = json.load(f_obj)
             return resp
@@ -171,8 +180,9 @@ class ArknightsGacha:
         )
 
         pool = f"当前卡池:【{self.data['name']}】"
+        l, _, lw, __ = font_base.getbbox(pool)
         draw.text(
-            (width_base - font_base.getsize(pool)[0] - tile, tile),
+            (width_base - lw - l - tile, tile),
             pool,
             fill="lightgrey",
             font=font_base,
@@ -224,8 +234,9 @@ class ArknightsGacha:
                 length = max(length, 3)
                 font_size = int(3 * font_base.size / length)
                 font = font_base.font_variant(size=font_size)
-                width_offset = (width - font.getsize(operator.name)[0]) // 2
-                height_offset = 1 + (tile - font.getsize(operator.name)[1]) // 2
+                l, t, lw, th = font.getbbox(operator.name)
+                width_offset = (width - lw - l) // 2
+                height_offset = 1 + (tile - th - t) // 2
 
                 draw.rounded_rectangle(
                     (base, tile * (i + 3) + 2, base + width - 2, tile * (i + 4)),

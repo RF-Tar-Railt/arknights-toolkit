@@ -3,6 +3,7 @@ from typing import Dict
 
 from loguru import logger
 from PIL import Image, ImageEnhance
+
 from . import need_init
 
 resource_path = Path(__file__).parent / "resource"
@@ -72,6 +73,7 @@ logger.debug("record base image loaded.")
 
 if need_init():
     import signal
+
     logger.critical("operator resources has not initialized yet")
     logger.error("please execute `arkkit init` in your command line")
     signal.raise_signal(signal.SIGINT)
@@ -80,6 +82,7 @@ operators: Dict[str, Image.Image] = {
     path.stem: Image.open(path) for path in (resource_path / "operators").iterdir()
 }
 logger.debug("operators image loaded.")
+
 
 def update_operators():
     for path in (resource_path / "operators").iterdir():

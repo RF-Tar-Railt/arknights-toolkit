@@ -1,11 +1,12 @@
 import json
 import re
+from enum import IntEnum
 from io import BytesIO
 from pathlib import Path
-from typing import List, Union
-from enum import IntEnum
+from typing import List, Optional, Union
 
 import httpx
+from httpx._types import ProxiesTypes
 from loguru import logger
 from lxml import etree
 from PIL import Image
@@ -138,6 +139,7 @@ else:
     }
 tables = guess_relate.setdefault("table", {})
 
+
 async def fetch_image(name: str, client: httpx.AsyncClient, retry: int):
     level = 2 if name == "阿米娅(近卫)" else 1
     _retry = retry
@@ -154,9 +156,7 @@ async def fetch_image(name: str, client: httpx.AsyncClient, retry: int):
             avatar: Image.Image = Image.open(
                 BytesIO(
                     (
-                        await client.get(
-                            f"https://prts.wiki{sub.xpath('@src').pop()}"
-                        )
+                        await client.get(f"https://prts.wiki{sub.xpath('@src').pop()}")
                     ).content
                 )
             ).crop((20, 0, 124 + 20, 360))
@@ -172,28 +172,30 @@ async def fetch_image(name: str, client: httpx.AsyncClient, retry: int):
     if not _retry:
         logger.error(f"failed to get image of {name} after {retry} retries")
 
-async def fetch_profile_image(name: str, client: httpx.AsyncClient, retry: int):
 
+async def fetch_profile_image(name: str, client: httpx.AsyncClient, retry: int):
     _retry = retry
     while _retry:
         logger.debug(f"handle profile image of {name} ...")
         try:
             resp = await client.get(
                 f"https://prts.wiki/w/文件:头像_{name}_2.png"
-                if name == "阿米娅(近卫)" else
-                f"https://prts.wiki/w/文件:头像_{name}.png",
-                timeout=20.0
+                if name == "阿米娅(近卫)"
+                else f"https://prts.wiki/w/文件:头像_{name}.png",
+                timeout=20.0,
             )
             if resp.status_code != 200:
                 raise RuntimeError(f"status code: {resp.status_code}")
             root = etree.HTML(resp.text)
             sub = root.xpath(
                 f'//img[@alt="文件:头像 {name} 2.png"]'
-                if name == "阿米娅(近卫)" else
-                f'//img[@alt="文件:头像 {name}.png"]'
+                if name == "阿米娅(近卫)"
+                else f'//img[@alt="文件:头像 {name}.png"]'
             )[0]
             with (operate_path / f"profile_{name}.png").open("wb+") as img:
-                img.write(httpx.get(f"https://prts.wiki{sub.xpath('@src').pop()}").read())
+                img.write(
+                    httpx.get(f"https://prts.wiki{sub.xpath('@src').pop()}").read()
+                )
             logger.success(f"{name} profile image saved")
             break
         except Exception as e:
@@ -202,9 +204,12 @@ async def fetch_profile_image(name: str, client: httpx.AsyncClient, retry: int):
     if not _retry:
         logger.error(f"failed to get profile image of {name} after {retry} retries")
 
+
 async def fetch_info(name: str, client: httpx.AsyncClient):
     logger.debug(f"handle info of {name} ...")
-    resp = await client.get(f"https://prts.wiki/index.php?title={name}&action=edit", timeout=20.0)
+    resp = await client.get(
+        f"https://prts.wiki/index.php?title={name}&action=edit", timeout=20.0
+    )
     root = etree.HTML(resp.text, etree.HTMLParser())
     sub = root.xpath('//textarea[@id="wpTextbox1"]')[0].text
     char = char_pat.search(sub)[1]
@@ -239,25 +244,32 @@ async def fetch_info(name: str, client: httpx.AsyncClient):
     career[name] = char
     logger.success(f"{name}({char}) info saved")
 
+
 class FetchFlag(IntEnum):
     IMG = 2
     REC = 1
     NON = 0
 
-async def fetch(select: Union[int, FetchFlag] = 0b11, cover: bool = False, retry: int = 5):
+
+async def fetch(
+    select: Union[int, FetchFlag] = 0b11,
+    cover: bool = False,
+    retry: int = 5,
+    proxy: Optional[ProxiesTypes] = None,
+):
     if select < 0 or select > 3:
         raise ValueError(select)
-    async with httpx.AsyncClient(verify=False) as client:
+    async with httpx.AsyncClient(verify=False, proxies=proxy) as client:
         try:
-            base = await client.get(
-                "https://prts.wiki/w/PRTS:文件一览/干员精英0头像"
-            )
+            base = await client.get("https://prts.wiki/w/PRTS:文件一览/干员精英0头像")
         except Exception as e:
             logger.error(f"failed to get base info: {type(e)}({e})")
             return False
         root = etree.HTML(base.text, etree.HTMLParser())
         imgs: List[etree._Element] = (
-            root.xpath('//div[@class="mw-parser-output"]')[0].getchildren()[0].getchildren()
+            root.xpath('//div[@class="mw-parser-output"]')[0]
+            .getchildren()[0]
+            .getchildren()
         )
         names = []
         for img in imgs:
@@ -269,9 +281,13 @@ async def fetch(select: Union[int, FetchFlag] = 0b11, cover: bool = False, retry
             try:
                 if name not in career or cover:
                     await fetch_info(name, client)
-                if select & 0b10 and (not (operate_path / f"{name}.png").exists() or cover):
+                if select & 0b10 and (
+                    not (operate_path / f"{name}.png").exists() or cover
+                ):
                     await fetch_image(name, client, retry)
-                if select & 0b01 and (not (operate_path / f"profile_{name}.png").exists() or cover):
+                if select & 0b01 and (
+                    not (operate_path / f"profile_{name}.png").exists() or cover
+                ):
                     await fetch_profile_image(name, client, retry)
             except (httpx.TimeoutException, httpx.ConnectError) as e:
                 logger.error(f"拉取 {name} 失败: {type(e)}({e})\n请检查网络或代理设置")

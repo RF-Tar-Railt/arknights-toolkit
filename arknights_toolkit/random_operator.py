@@ -1,9 +1,9 @@
 import json
+import math
 from datetime import datetime
 from pathlib import Path
 from random import Random
-import math
-from typing import List, Optional, TypedDict, Literal, Dict
+from typing import Dict, List, Literal, Optional, TypedDict
 
 
 class Tags(TypedDict):
@@ -64,7 +64,7 @@ class RandomOperator:
         rand = Random()
         count = sum(ord(char) for char in name)
         now = datetime.now()
-        rand.seed(count + (now.day * now.month) + now.year)
+        rand.seed(count + (now.day * now.month) + now.hour + now.minute + now.year)
 
         career_dict = rand.choice(self.rand_operator_dict["career"])
         career_name = career_dict["name"]
@@ -81,7 +81,7 @@ class RandomOperator:
         attack_speed = career_info_dict["attack_speed"]
         block = career_info_dict["block"]
         talent = career_info_dict["talent"]
-        position = career_info_dict['tags']['position']
+        position = career_info_dict["tags"]["position"]
         tags = f"{position} {rand.choice(career_info_dict['tags']['detail'])}"
         infect = "参照医学检测报告，确认为" + ("感染者。" if rand.randint(0, 10) > 5 else "非感染者。")
         race = rand.choice(self.rand_operator_dict["race"])
@@ -95,23 +95,29 @@ class RandomOperator:
         )
         skills = []
         for i in range(1, 2 if level < 4 else (3 if level < 6 else 4)):
-            cover = rand.choice(self.rand_operator_dict['skill']['cover'])
-            trigger = rand.choice(self.rand_operator_dict['skill']['trigger'])
+            cover = rand.choice(self.rand_operator_dict["skill"]["cover"])
+            trigger = rand.choice(self.rand_operator_dict["skill"]["trigger"])
             total = rand.randint(1, 24 if cover == "受击回复" else 120)
             start = total - rand.randint(1, total)
-            detail = rand.choice(list(self.rand_operator_dict['skill']['detail'].keys()))
+            detail = rand.choice(
+                list(self.rand_operator_dict["skill"]["detail"].keys())
+            )
             if career_detail == "处决者":
-                skills.append(
-                    f"【{i}】被动\n  初始 0; 消耗 0; 持续 -"
-                )
+                skills.append(f"【{i}】被动\n  初始 0; 消耗 0; 持续 -")
                 continue
             if position == "远程位" and cover == "受击回复":
                 cover = rand.choice(["自动回复", "攻击回复"])
             if career_name == "先锋" and cover == "受击回复":
                 cover = rand.choice(["自动回复"])
             if detail == "need":
-                last = rand.randint(1, math.ceil(total + 1 / 2) + (0 if rand.randint(0, 10) > 2 else rand.randint(1, start + 1)))
-                content = rand.choice(self.rand_operator_dict['skill']['detail'][detail])
+                last = rand.randint(
+                    1,
+                    math.ceil(total + 1 / 2)
+                    + (0 if rand.randint(0, 10) > 2 else rand.randint(1, start + 1)),
+                )
+                content = rand.choice(
+                    self.rand_operator_dict["skill"]["detail"][detail]
+                )
                 if content == "-":
                     skills.append(
                         f"【{i}】{cover}/{trigger}\n  初始 {start}; 消耗 {total}; 持续 {last}s"
@@ -121,7 +127,9 @@ class RandomOperator:
                         f"【{i}】{cover}/手动触发\n  初始 {start}; 消耗 {total}; 持续 {last}s\n  {content}"
                     )
             else:
-                content = rand.choice(self.rand_operator_dict['skill']['detail'][detail])
+                content = rand.choice(
+                    self.rand_operator_dict["skill"]["detail"][detail]
+                )
                 if content == "-":
                     skills.append(
                         f"【{i}】{cover}/{trigger}\n  初始 {start}; 消耗 {total}; 持续 0s"
@@ -135,7 +143,9 @@ class RandomOperator:
                         start = 0
                         if career_detail == "行商":
                             total = total if total < 15 else math.ceil(total / 5)
-                    elif content.startswith("可充能") or content.startswith("可以在以下状态和初始状态间切换"):
+                    elif content.startswith("可充能") or content.startswith(
+                        "可以在以下状态和初始状态间切换"
+                    ):
                         start = 0
                         total = total if total < 20 else math.ceil(total / 5)
                     skills.append(

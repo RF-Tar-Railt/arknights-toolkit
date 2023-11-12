@@ -3,9 +3,10 @@ import re
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import List, NamedTuple
+from typing import List, NamedTuple, Optional
 
 from httpx import AsyncClient, ConnectError, TimeoutException
+from httpx._types import ProxiesTypes
 from loguru import logger
 from lxml import etree
 
@@ -25,13 +26,13 @@ class UpdateResponse:
     pool: str
 
 
-
 pat1 = re.compile(r"(.*)(寻访|复刻).*?开启")
 pat2 = re.compile(r"[【】]")
 pat3 = re.compile(r"[（：]")
 pat4 = re.compile(r"（|）：")
 pat5 = re.compile(r"（在.*?以.*?(\d+).*?倍.*?）")
 pat6 = re.compile(r"（占.*?的.*?(\d+).*?%）")
+
 
 def fetch_chars(dom):
     contents = dom.xpath(
@@ -58,9 +59,7 @@ def fetch_chars(dom):
         r"""两类格式：用/分割，用\分割；★+(概率)+名字，★+名字+(概率)"""
         for char in chars:
             star = char.split("（")[0].count("★")
-            name = (
-                pat3.split(char)[1] if "★（" not in char else pat4.split(char)[2]
-            )
+            name = pat3.split(char)[1] if "★（" not in char else pat4.split(char)[2]
             names = name.replace("\\", "/").split("/")
             for name in names:
                 limit = False
@@ -75,8 +74,9 @@ def fetch_chars(dom):
         break  # 这里break会导致个问题：如果一个公告里有两个池子，会漏掉下面的池子，比如 5.19 的定向寻访。但目前我也没啥好想法解决
     return title, pool_img, up_chars
 
-async def update():
-    async with AsyncClient(verify=False) as client:
+
+async def update(proxy: Optional[ProxiesTypes] = None):
+    async with AsyncClient(verify=False, proxies=proxy) as client:
         result = (await client.get("https://ak.hypergryph.com/news.html")).text
         if not result:
             logger.warning("明日方舟 获取公告出错")
@@ -104,9 +104,9 @@ async def update():
             )
 
 
-async def fetch(table: dict):
+async def fetch(table: dict, proxy: Optional[ProxiesTypes] = None):
     base_url = "https://prts.wiki/w/%E5%8D%A1%E6%B1%A0%E4%B8%80%E8%A7%88"
-    async with AsyncClient(verify=False) as client:
+    async with AsyncClient(verify=False, proxies=proxy) as client:
         base = await client.get(base_url, timeout=30)
         root = etree.HTML(base.text, etree.HTMLParser())
         _table: etree._Element = root.xpath(
@@ -116,7 +116,7 @@ async def fetch(table: dict):
         trs: List[etree._Element] = tbody.getchildren()
         tds: List[etree._Element] = trs[2].getchildren()
         href = tds[0].find("a").get("href")
-        link = f'https://prts.wiki{href}'
+        link = f"https://prts.wiki{href}"
         if href.count("/") == 3:
             page = await client.get(link, timeout=30)
             root1 = etree.HTML(page.text, etree.HTMLParser())
@@ -125,14 +125,13 @@ async def fetch(table: dict):
             page1 = await client.get(link, timeout=30)
             root2 = etree.HTML(page1.text, etree.HTMLParser())
             href1 = (
-                root2
-                .xpath("//div[@class='mw-parser-output']")[0]
+                root2.xpath("//div[@class='mw-parser-output']")[0]
                 .getchildren()[1]
                 .getchildren()[1]
                 .getchildren()[0]
                 .get("href")
             )
-            link1 = f'https://prts.wiki{href1}'
+            link1 = f"https://prts.wiki{href1}"
             page2 = await client.get(link1, timeout=30)
             root3 = etree.HTML(page2.text, etree.HTMLParser())
             data = root3.xpath("//script[@id='data_operator']")[0].text.splitlines()
@@ -147,6 +146,7 @@ async def fetch(table: dict):
                 "is_old": datetime.fromisoformat(rows[3][:10])
                 < datetime.fromisoformat("2020-05-01"),
             }
+
 
 def make(table: dict, pool: dict):
     """生成卡池信息"""
@@ -169,9 +169,9 @@ def make(table: dict, pool: dict):
             pool["operators"]["四"].append(name)
 
 
-async def generate(file: Path):
+async def generate(file: Path, proxy: Optional[ProxiesTypes] = None):
     try:
-        response = await update()
+        response = await update(proxy)
     except (TimeoutException, ConnectError) as e:
         logger.warning(f"明日方舟 获取公告出错: {type(e)}({e})\n请检查网络或代理设置")
         return
@@ -228,7 +228,7 @@ async def generate(file: Path):
     tablefile = Path(__file__).parent.parent / "resource" / "gacha" / "table.json"
     table = {}
     try:
-        await fetch(table)
+        await fetch(table, proxy)
         with tablefile.open("w+", encoding="utf-8") as f:
             json.dump(table, f, ensure_ascii=False, indent=2)
     except (TimeoutException, ConnectError):
@@ -242,4 +242,3 @@ async def generate(file: Path):
         json.dump(pool, f, ensure_ascii=False, indent=2)
     logger.info(f"明日方舟 卡池信息已更新: {response.title}")
     return response
-

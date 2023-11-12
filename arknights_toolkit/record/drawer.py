@@ -9,8 +9,8 @@ from matplotlib import font_manager as fm
 from matplotlib import pyplot as plt
 from PIL import Image, ImageDraw, ImageFont
 
+from ..images import bottom_image, operators, rainbow_image, title_image
 from .style import *
-from ..images import operators, rainbow_image, title_image, bottom_image
 
 """ 
 利用PIL和PLT制图
@@ -266,7 +266,12 @@ class CharImage(BaseImage):
         key = f"profile_{char_name}"
         if key in operators:
             char_profile0 = operators[key]
-        elif (file := Path(__file__).parent.parent / "resource" / "operators" / f"{key}.png").exists():
+        elif (
+            file := Path(__file__).parent.parent
+            / "resource"
+            / "operators"
+            / f"{key}.png"
+        ).exists():
             char_profile0 = operators[key] = Image.open(file)
         else:
             char_profile0 = Image.open(resource_path / "profile_海猫.png")

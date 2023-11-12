@@ -1,17 +1,17 @@
-import re
-from pathlib import Path
-import json
-import urllib
-from typing import Tuple, Optional
 import asyncio
+import json
+import re
+import urllib
+from pathlib import Path
+from typing import Optional, Tuple
+
 import httpx
 
+from ..update.record import generate
 from .database import ArkDatabase
 from .drawer import ArkImage
 from .style import get_img_wh
 
-
-from ..update.record import generate
 
 async def url_scrawler(token: str, channel: int) -> Tuple[str, list]:
     """_summary_
@@ -36,7 +36,9 @@ async def url_scrawler(token: str, channel: int) -> Tuple[str, list]:
     async with httpx.AsyncClient() as client:
         try:
             for i in range(1, 11):
-                _data = await client.get(f"{base_url}&channelId={channel}&page={i}", headers=headers)
+                _data = await client.get(
+                    f"{base_url}&channelId={channel}&page={i}", headers=headers
+                )
                 res_data = _data.json()
                 if page_data := res_data["data"]["list"]:
                     draw_info_list.extend(page_data)
@@ -80,7 +82,9 @@ class ArkRecord:
                 if not asyncio.events._get_running_loop():  # type: ignore
                     asyncio.run(generate(self.pool_path))
                 else:
-                    asyncio.create_task(generate(self.pool_path), name="generate_pool_info")
+                    asyncio.create_task(
+                        generate(self.pool_path), name="generate_pool_info"
+                    )
         self.database = ArkDatabase(db_path, max_char_count, max_pool_count)
 
     def user_token_save(self, player_token: str, user_session: str):
@@ -111,15 +115,6 @@ class ArkRecord:
         self.database.write_token2db(user_session, player_token)
         return "成功保存token"
 
-    def user_export_file(
-        self,
-        user_session: str,
-        xlsx_save_path: Path,
-    ):
-        """抽卡信息导出为 Excel 文件"""
-        player_info = self.database.read_token_from_db(user_session)
-        return self.database.export_record2file(int(player_info[2]), player_info[0], user_session, xlsx_save_path)
-
     async def user_analysis(
         self,
         user_session: str,
@@ -144,10 +139,10 @@ class ArkRecord:
             )
         # 读数据库
         self.database.check_view(int(player_uid))
-        _real_count = self.database.create_view(
-            pool_name, int(player_uid), count
+        _real_count = self.database.create_view(pool_name, int(player_uid), count)
+        query_info = self.database.query_all_items(
+            pool_name, int(player_uid), _real_count
         )
-        query_info = self.database.query_all_items(pool_name, int(player_uid), _real_count)
         # 生成图片
         aig = ArkImage(query_info, player_uid, get_img_wh(query_info), self.save_dir)
         aig.draw_all(player_name, _real_count)
