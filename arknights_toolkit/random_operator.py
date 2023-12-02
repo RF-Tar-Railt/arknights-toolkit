@@ -97,7 +97,7 @@ class RandomOperator:
         for i in range(1, 2 if level < 4 else (3 if level < 6 else 4)):
             cover = rand.choice(self.rand_operator_dict["skill"]["cover"])
             trigger = rand.choice(self.rand_operator_dict["skill"]["trigger"])
-            total = rand.randint(1, 24 if cover == "受击回复" else 120)
+            total = rand.randint(1, 120 if cover == "自动回复" else 24)
             start = total - rand.randint(1, total)
             detail = rand.choice(
                 list(self.rand_operator_dict["skill"]["detail"].keys())

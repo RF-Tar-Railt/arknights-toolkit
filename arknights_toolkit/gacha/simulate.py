@@ -54,7 +54,7 @@ async def simulate_image(ops: List[Operator], proxy: Optional[ProxiesTypes] = No
                     with (resource_path / "info.json").open("w+", encoding="utf-8") as jf:
                         table[name] = info
                         json.dump(infos, jf, ensure_ascii=False, indent=2)
-            except (ValueError, IndexError, httpx.TimeoutException, httpx.ConnectError):
+            except (TypeError, ValueError, IndexError, httpx.TimeoutException, httpx.ConnectError):
                 logo: Image.Image = characters[random.choice(list(characters))].resize(
                     (96, 96), Image.Resampling.LANCZOS
                 )

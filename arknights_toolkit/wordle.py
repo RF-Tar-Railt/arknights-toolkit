@@ -13,7 +13,7 @@ from .update.main import fetch
 
 __all__ = ["Operator", "Guess", "GuessUnit", "OperatorWordle"]
 
-simple_sign = {"correct": "🟩", "down": "🟦", "up": "🟦", "wrong": "🟥", "relate": "🟨"}
+simple_sign = {"correct": "🟩", "down": "⬇", "up": "⬆", "wrong": "🟥", "relate": "🟨"}
 
 state = Literal["correct", "down", "up", "wrong", "relate"]
 
