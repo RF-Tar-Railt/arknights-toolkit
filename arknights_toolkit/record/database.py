@@ -3,9 +3,9 @@ import platform
 import shutil
 import sqlite3 as sq
 import time
-import urllib
+from urllib.parse import unquote
 from pathlib import Path
-from typing import Any, Callable, Optional, Tuple, TypedDict
+from typing import Any, List, Callable, Optional, Tuple, TypedDict
 
 import httpx
 from loguru import logger
@@ -29,7 +29,7 @@ def get_player_uid(token: str):
     page_content = json.loads(content)
     try:
         if page_content["status"] != 0:  # b服
-            token = urllib.parse.unquote(token)  # noqa
+            token = unquote(token)
             payload = {"token": token}
             content = httpx.post(base_url, data=payload).content
             page_content = json.loads(content)
@@ -76,13 +76,13 @@ class ArkDatabase:
                     "不支持的操作系统！开发者仅做了Windows和Linux的适配（由于没有苹果电脑）。建议联系开发者或自行修改源码。"
                 )
             db_dir.mkdir(parents=True, exist_ok=True)
-            db_path = db_dir / "arkgacha_record.db"
+            _db_path = db_dir / "arkgacha_record.db"
         else:
-            db_path = Path(db_path)
+            _db_path = Path(db_path)
         _db_path16 = resource_path / "arkgacha_record.db"
-        if not db_path.exists():
-            shutil.copy(_db_path16, db_path)
-        self.db = sq.connect(str(db_path.absolute()))
+        if not _db_path.exists():
+            shutil.copy(_db_path16, _db_path)
+        self.db = sq.connect(str(_db_path.absolute()))
         self.config = {
             "user_table": "user",
             "user_session_field": "user_session",
@@ -174,19 +174,19 @@ class ArkDatabase:
     def query_all_items(self, target_pool: str, player_uid: int, max_record_count: int):
         max_record_count = self._handle_max_count(player_uid, max_record_count)
 
-        def filter_star6char(info: list):  # 判断是否为六星
+        def filter_star6char(info: List[str]):  # 判断是否为六星
             return info[2] == 6
 
-        def filter_newchar(info: list):  # 判断是否为新角色
+        def filter_newchar(info: List[str]):  # 判断是否为新角色
             return info[3]
 
-        star6char_query_param = {
+        star6char_query_param: QueryParameter = {
             "op_type": "六星干员",
             "filter_func": filter_star6char,
             "cost_statis": True,
         }
 
-        newchar_query_param = {
+        newchar_query_param: QueryParameter = {
             "op_type": "新干员",
             "filter_func": filter_newchar,
             "cost_statis": False,

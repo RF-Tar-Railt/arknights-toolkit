@@ -42,11 +42,11 @@ def pil_font(font_size: int, font_path: Path):
     return ImageFont.truetype(str(font_path.absolute()), font_size, encoding="utf-8")
 
 
-def set_plt_font(font_size: int = 16, font_path: str = ark_text_font_path):
+def set_plt_font(font_size: int = 16, font_path: Path = ark_text_font_path):
     return {"size": font_size, "fontproperties": fm.FontProperties(fname=font_path)}
 
 
-def plt_tick_font(font_size: int = 16, font_path: str = ark_text_font_path):
+def plt_tick_font(font_size: int = 16, font_path: Path = ark_text_font_path):
     return fm.FontProperties(fname=font_path, size=font_size)
 
 
@@ -99,7 +99,7 @@ class ArkImageDrawer:
     # 贴图
     def dpaste(
         self,
-        img: Image,
+        img: Image.Image,
         pos: Optional[Tuple[int, int]] = None,
         alpha: bool = False,
     ):
@@ -126,7 +126,7 @@ def save_tmp_fig(fig):
 
 
 def round_corner(
-    img: Image,
+    img: Image.Image,
     radii: int,
     back_color: Union[str, Tuple[float, float, float]] = base_img_back_color,
 ):

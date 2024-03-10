@@ -80,12 +80,13 @@ async def update(proxy: Optional[ProxiesTypes] = None):
         result = (await client.get("https://ak.hypergryph.com/news.html")).text
         if not result:
             logger.warning("明日方舟 获取公告出错")
-            return
+            raise TimeoutException("未找到明日方舟公告")
         dom = etree.HTML(result, etree.HTMLParser())
         activity_urls = dom.xpath(
             "//ol[@class='articleList' and @data-category-key='ACTIVITY']/li/a/@href"
         )
-
+        # 按照公告的时间排序
+        activity_urls.sort(key=lambda x: x.split("/")[-1], reverse=True)
         for activity_url in activity_urls[:20]:  # 减少响应时间, 10个就够了
             activity_url = f"https://ak.hypergryph.com{activity_url}"
             result = (await client.get(activity_url)).text
@@ -102,6 +103,7 @@ async def update(proxy: Optional[ProxiesTypes] = None):
             return UpdateResponse(
                 title, up_chars[2], up_chars[1], up_chars[0], pool_img
             )
+        raise TimeoutException("未找到明日方舟公告")
 
 
 async def fetch(table: dict, proxy: Optional[ProxiesTypes] = None):
@@ -115,7 +117,7 @@ async def fetch(table: dict, proxy: Optional[ProxiesTypes] = None):
         tbody: etree._Element = _table.getchildren()[0]
         trs: List[etree._Element] = tbody.getchildren()
         tds: List[etree._Element] = trs[2].getchildren()
-        href = tds[0].find("a").get("href")
+        href = tds[0].find("a", None).get("href")
         link = f"https://prts.wiki{href}"
         if href.count("/") == 3:
             page = await client.get(link, timeout=30)

@@ -146,7 +146,7 @@ async def fetch_image(name: str, client: httpx.AsyncClient, retry: int):
             )
             if resp.status_code != 200:
                 raise RuntimeError(f"status code: {resp.status_code}")
-            root = etree.HTML(resp.text)
+            root = etree.HTML(resp.text, etree.HTMLParser())
             sub = root.xpath(f'//img[@alt="文件:半身像 {name} {level}.png"]')[0]
             avatar: Image.Image = Image.open(
                 BytesIO(
@@ -181,7 +181,7 @@ async def fetch_profile_image(name: str, client: httpx.AsyncClient, retry: int):
             )
             if resp.status_code != 200:
                 raise RuntimeError(f"status code: {resp.status_code}")
-            root = etree.HTML(resp.text)
+            root = etree.HTML(resp.text, etree.HTMLParser())
             sub = root.xpath(
                 f'//img[@alt="文件:头像 {name} 2.png"]'
                 if name == "阿米娅(近卫)"

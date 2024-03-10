@@ -49,12 +49,12 @@ class RandomOperator:
         """
         :param path: 模板文件路径
         """
-        path = (
+        _path = (
             Path(path)
             if path
             else Path(__file__).parent / "resource" / "operator_template.json"
         )
-        with path.open("r+", encoding="utf-8") as f:
+        with _path.open("r+", encoding="utf-8") as f:
             self.rand_operator_dict = json.load(f)
 
     def generate(self, name: str) -> str:

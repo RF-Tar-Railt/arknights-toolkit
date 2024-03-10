@@ -19,7 +19,7 @@ def get_prts_pool_info(pinfo: dict):
             if not (td := tr.getchildren()):
                 continue
             td0: etree._Element = td[0]
-            if (a_elem := td0.find("a")) is not None:
+            if (a_elem := td0.find("a", None)) is not None:
                 pname = a_elem.get('title').strip().strip("寻访模拟/")
                 pinfo[pname] = {"is_exclusive": bool(g_type)}
     return pinfo

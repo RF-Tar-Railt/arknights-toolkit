@@ -31,7 +31,7 @@ class Operator(TypedDict):
     career: str
     race: str
     artist: str
-    relate: Optional[List[str]]
+    relate: List[str]
 
 
 class GuessUnit(TypedDict):
@@ -106,7 +106,7 @@ class OperatorWordle:
         else:
             with data_path.open("r", encoding="utf-8") as _f:
                 sdata = json.load(_f)
-                selected_name = sdata["select_name"]
+                selected_name: str = sdata["select_name"]
                 selected = sdata["select"]
                 old_res = sdata["units"]
                 select_time = sdata["select_time"]
@@ -169,7 +169,7 @@ class OperatorWordle:
         return Guess("guessing", old_res + [res], selected_name, selected)
 
     @overload
-    def draw(self, res: Guess, max_guess: int = 8) -> bytes:
+    def draw(self, res: Guess, *, max_guess: int = 8) -> bytes:
         ...
 
     @overload

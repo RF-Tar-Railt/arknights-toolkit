@@ -31,7 +31,7 @@ class Update(BasePlugin):
             proxy = result.query("proxy.url")
             if result.find("update.gacha"):
                 asyncio.run(
-                    generate_gacha(Path(result.query("update.gacha.path")).absolute(), proxy)
+                    generate_gacha(Path(result.query[str]("update.gacha.path", "")).absolute(), proxy)
                 )
             if result.find("update.record"):
                 path = Path(

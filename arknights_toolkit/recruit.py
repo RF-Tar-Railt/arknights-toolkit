@@ -221,7 +221,7 @@ class Char:
             "rarity": rarity_state >> len(TAG),
             "tag": tag_state,
         }
-        return encode_to_base58(dumps(payload))
+        return encode_to_base58(dumps(payload))  # type: ignore
 
     REPLACE_MAP = {
         "术士": "术师",

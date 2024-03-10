@@ -43,7 +43,7 @@ class Init(BasePlugin):
     def dispatch(self, result: Arparma) -> bool | None:
         if result.find("init"):
             select = sum(set(result.query("init.select.flag", [1, 2])))
-            asyncio.run(fetch(select, result.query("init.cover.value"), proxy=result.query("proxy.url")))
+            asyncio.run(fetch(select, result.query[bool]("init.cover.value", False), proxy=result.query[str]("proxy.url")))
             from arknights_toolkit import __version__
 
             base_path = Path(__file__).parent.parent.parent / "resource"

@@ -5,7 +5,7 @@ import math
 import random
 from io import BytesIO
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import List, Dict, Tuple, Optional, Union
 
 from httpx._types import ProxiesTypes
 from PIL import Image, ImageDraw, ImageFont
@@ -32,7 +32,7 @@ class ArknightsGacha:
     three_per: int
     data: GachaData
 
-    color = {
+    color: Dict[int, Tuple[int, int, int]] = {
         6: (0xFF, 0x7F, 0x27),  # ff7f27
         5: (0xFF, 0xC9, 0x0E),  # ffc90e
         4: (0x93, 0x19, 0x93),  # d8b3d8
@@ -244,14 +244,17 @@ class ArknightsGacha:
                     radius=2,
                     fill=self.color[operator.rarity],
                 )
+                half_color: Tuple[int, int, int] = (
+                    self.color[operator.rarity][0] // 2, 
+                    self.color[operator.rarity][1] // 2, 
+                    self.color[operator.rarity][2] // 2
+                )
                 draw.text(
                     (base + width_offset, tile * (i + 3) + height_offset),
                     operator.name,
                     fill="#ffffff",
                     stroke_width=1,
-                    stroke_fill=tuple(
-                        int(i * 0.5) for i in self.color[operator.rarity]
-                    ),
+                    stroke_fill=half_color,
                     font=font,
                 )
                 base += width
