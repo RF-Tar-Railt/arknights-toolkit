@@ -125,10 +125,11 @@ async def fetch(table: dict, proxy: Optional[ProxiesTypes] = None):
             data = root1.xpath("//script[@id='data_operator']")[0].text.splitlines()
         else:
             page1 = await client.get(link, timeout=30)
+            with open("test.html", "w+", encoding='utf-8') as f:
+                f.write(page1.text)
             root2 = etree.HTML(page1.text, etree.HTMLParser())
             href1 = (
                 root2.xpath("//div[@class='mw-parser-output']")[0]
-                .getchildren()[1]
                 .getchildren()[1]
                 .getchildren()[0]
                 .get("href")

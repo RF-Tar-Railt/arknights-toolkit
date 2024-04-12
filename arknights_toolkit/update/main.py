@@ -146,12 +146,12 @@ async def fetch_image(name: str, client: httpx.AsyncClient, retry: int):
             )
             if resp.status_code != 200:
                 raise RuntimeError(f"status code: {resp.status_code}")
-            root = etree.HTML(resp.text, etree.HTMLParser())
+            root = etree.HTML(resp.text)
             sub = root.xpath(f'//img[@alt="文件:半身像 {name} {level}.png"]')[0]
             avatar: Image.Image = Image.open(
                 BytesIO(
                     (
-                        await client.get(f"https://prts.wiki{sub.xpath('@src').pop()}")
+                        await client.get(sub.xpath('@src').pop())
                     ).content
                 )
             ).crop((20, 0, 124 + 20, 360))
@@ -181,7 +181,7 @@ async def fetch_profile_image(name: str, client: httpx.AsyncClient, retry: int):
             )
             if resp.status_code != 200:
                 raise RuntimeError(f"status code: {resp.status_code}")
-            root = etree.HTML(resp.text, etree.HTMLParser())
+            root = etree.HTML(resp.text)
             sub = root.xpath(
                 f'//img[@alt="文件:头像 {name} 2.png"]'
                 if name == "阿米娅(近卫)"
@@ -189,7 +189,9 @@ async def fetch_profile_image(name: str, client: httpx.AsyncClient, retry: int):
             )[0]
             with (operate_path / f"profile_{name}.png").open("wb+") as img:
                 img.write(
-                    httpx.get(f"https://prts.wiki{sub.xpath('@src').pop()}").read()
+                    (
+                        await client.get(sub.xpath('@src').pop())
+                    ).content
                 )
             logger.success(f"{name} profile image saved")
             break
@@ -272,7 +274,9 @@ async def fetch(
         for img in imgs:
             img_elem: etree._Element = img.getchildren()[0]
             alt: str = img_elem.get("alt", "None")
-            if alt.startswith("头像") and "(集成战略)" not in alt and "预备干员" not in alt:
+            if alt.startswith("头像") and "(集成战略)" not in alt and "预备干员" not in alt and alt[3:-4] not in {
+                "F91", "全知海猫", "小色", "海猫"
+            }:
                 names.append(alt[3:-4])
         for name in names:
             try:
