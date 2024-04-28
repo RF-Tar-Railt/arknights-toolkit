@@ -12,6 +12,7 @@ dependencies = [
     "matplotlib>=3.7.5",
     "cli-lite>=0.8.3",
     "msgpack>=1.0.8",
+    "ujson>=5.9.0",
 ]
 requires-python = ">=3.8"
 readme = "README.md"
@@ -40,7 +41,7 @@ dev = [
 includes = ["arknights_toolkit"]
 excludes = [
     "arknights_toolkit/resource/ops_initialized",
-    "arknights_toolkit/resource/careers.json",
+    "arknights_toolkit/resource/info.json",
     "arknights_toolkit/resource/operators/*"
 ]
 

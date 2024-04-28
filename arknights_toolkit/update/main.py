@@ -1,26 +1,27 @@
-import json
 import re
 from enum import IntEnum
 from io import BytesIO
 from pathlib import Path
 from typing import List, Optional, Union
 
+import ujson as json
 import httpx
 from httpx._types import ProxiesTypes
 from loguru import logger
-from lxml import etree
+import lxml.etree as etree
 from PIL import Image
 
 __all__ = ["fetch", "fetch_info", "fetch_image", "fetch_profile_image"]
 
-rarity_pat = re.compile(r"\|稀有度=(\d+?)\n\|.+?")
-char_pat = re.compile(r"\|职业=([^|]+?)\n\|.+?")
-sub_char_pat = re.compile(r"\|分支=([^|]+?)\n\|.+?")
-race_pat = re.compile(r"\|种族=([^|]+?)\n\|.+?")
-org_pat = re.compile(r"\|所属国家=([^|]+?)\n\|.+?")
-org_pat1 = re.compile(r"\|所属组织=([^|]+?)\n\|.+?")
-org_pat2 = re.compile(r"\|所属团队=([^|]+?)\n\|.+?")
-art_pat = re.compile(r"\|画师=([^|]+?)\n\|.+?")
+id_pat = re.compile(r"\|干员id=char_([^|]+?)\n\|")
+rarity_pat = re.compile(r"\|稀有度=(\d+?)\n\|")
+char_pat = re.compile(r"\|职业=([^|]+?)\n\|")
+sub_char_pat = re.compile(r"\|分支=([^|]+?)\n\|")
+race_pat = re.compile(r"\|种族=([^|]+?)\n\|")
+org_pat = re.compile(r"\|所属国家=([^|]+?)\n\|")
+org_pat1 = re.compile(r"\|所属组织=([^|]+?)\n\|")
+org_pat2 = re.compile(r"\|所属团队=([^|]+?)\n\|")
+art_pat = re.compile(r"\|画师=([^|]+?)\n\|")
 
 base_path = Path(__file__).parent.parent / "resource"
 operate_path = base_path / "operators"
@@ -209,30 +210,32 @@ async def fetch_info(name: str, client: httpx.AsyncClient):
     )
     root = etree.HTML(resp.text, etree.HTMLParser())
     sub = root.xpath('//textarea[@id="wpTextbox1"]')[0].text
-    char = char_pat.search(sub)[1]
-    sub_char = sub_char_pat.search(sub)[1]
-    rarity = rarity_pat.search(sub)[1]
+    op_id = id_pat.search(sub)[1]  # type: ignore
+    char = char_pat.search(sub)[1]  # type: ignore
+    sub_char = sub_char_pat.search(sub)[1]  # type: ignore
+    rarity = rarity_pat.search(sub)[1]  # type: ignore
     try:
-        race = race_pat.search(sub)[1]
+        race = race_pat.search(sub)[1]  # type: ignore
     except TypeError:
         race = "/"
     try:
-        org1 = org_pat.search(sub)[1]
+        org1 = org_pat.search(sub)[1]  # type: ignore
     except TypeError:
         org1 = ""
     try:
-        org2 = org_pat1.search(sub)[1]
+        org2 = org_pat1.search(sub)[1]  # type: ignore
     except TypeError:
         org2 = ""
     try:
-        org3 = org_pat2.search(sub)[1]
+        org3 = org_pat2.search(sub)[1]  # type: ignore
     except TypeError:
         org3 = ""
     org = org3 or org2 or org1
     org = org or "/"
-    art = art_pat.search(sub)[1]
+    art = art_pat.search(sub)[1]  # type: ignore
     logger.success(f"{name}({char}) info fetched")
     return {
+        "id": f"char_{op_id}",
         "rarity": int(rarity),
         "org": org,
         "career": f"{char}-{sub_char}",

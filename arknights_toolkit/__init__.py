@@ -2,11 +2,12 @@ from pathlib import Path
 
 from packaging import version
 
-from .gacha import ArknightsGacha, GachaUser
-from .random_operator import RandomOperator
-from .recruit import recruitment
+from .gacha import ArknightsGacha as ArknightsGacha
+from .gacha import GachaUser as GachaUser
+from .random_operator import RandomOperator as RandomOperator
+from .recruit import recruitment as recruitment
 
-__version__ = "0.6.5"
+__version__ = "0.7.0"
 
 
 def need_init():
