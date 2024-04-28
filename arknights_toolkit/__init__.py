@@ -7,7 +7,7 @@ from .gacha import GachaUser as GachaUser
 from .random_operator import RandomOperator as RandomOperator
 from .recruit import recruitment as recruitment
 
-__version__ = "0.7.0"
+__version__ = "0.7.1"
 
 
 def need_init():

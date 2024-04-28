@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from typing import Optional, List
 import ujson
@@ -7,14 +8,16 @@ from httpx import AsyncClient
 from loguru import logger
 from httpx._types import ProxiesTypes
 
-from .model import UpdateInfo, GachaTableIndex, GachaTableDetails
+from .model import GachaTableIndex, GachaTableDetails
 
 INDEX_URL = "https://gh-proxy.com/github.com/Kengxxiao/ArknightsGameData/blob/master/zh_CN/gamedata/excel/gacha_table.json"
 DETAILS_URL = "https://weedy.baka.icu/gacha_table.json"
 
 fetched_ops_path = Path(__file__).parent.parent.parent / "resource" / "info.json"
 
-if not fetched_ops_path.exists():
+IN_CLI = (Path(__file__).parent.parent.parent / "resource" / "cli_record").exists()
+
+if not fetched_ops_path.exists() and not IN_CLI:
     logger.critical("operator resources has not initialized yet")
     logger.error("please execute `arkkit init` in your command line")
     signal.raise_signal(signal.SIGINT)
@@ -24,7 +27,7 @@ with fetched_ops_path.open("r", encoding="utf-8") as f:
 
 tables = fetched_ops["table"]
 
-if "id" not in tables["陈"]:
+if "id" not in tables["陈"] and not IN_CLI:
     logger.critical("operator resources has been outdated")
     logger.error("please execute `arkkit init --cover` in your command line")
     signal.raise_signal(signal.SIGINT)
