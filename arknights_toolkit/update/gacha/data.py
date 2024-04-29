@@ -1,4 +1,4 @@
-import os
+import sys
 from pathlib import Path
 from typing import Optional, List
 import ujson
@@ -15,24 +15,21 @@ DETAILS_URL = "https://weedy.baka.icu/gacha_table.json"
 
 fetched_ops_path = Path(__file__).parent.parent.parent / "resource" / "info.json"
 
-IN_CLI = (Path(__file__).parent.parent.parent / "resource" / "cli_record").exists()
 
-if not fetched_ops_path.exists() and not IN_CLI:
-    logger.critical("operator resources has not initialized yet")
-    logger.error("please execute `arkkit init` in your command line")
-    signal.raise_signal(signal.SIGINT)
+if fetched_ops_path.exists():
+    with fetched_ops_path.open("r", encoding="utf-8") as f:
+        fetched_ops = ujson.load(f)
 
-with fetched_ops_path.open("r", encoding="utf-8") as f:
-    fetched_ops = ujson.load(f)
+    tables = fetched_ops["table"]
 
-tables = fetched_ops["table"]
+    if "id" not in tables["陈"]:
+        logger.critical("operator resources has been outdated")
+        logger.error("please execute `arkkit init --cover` in your command line")
+        signal.raise_signal(signal.SIGINT)
 
-if "id" not in tables["陈"] and not IN_CLI:
-    logger.critical("operator resources has been outdated")
-    logger.error("please execute `arkkit init --cover` in your command line")
-    signal.raise_signal(signal.SIGINT)
-
-mapping = {info["id"]: name for name, info in tables.items()}
+    mapping = {info["id"]: name for name, info in tables.items()}
+else:
+    mapping = {}
 
 rarity_table_file = Path(__file__).parent.parent.parent / "resource" / "gacha" / "rarity_table.json"
 

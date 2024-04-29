@@ -6,7 +6,6 @@ from pathlib import Path
 from arclet.alconna import Alconna, Args, Arparma, CommandMeta, Option
 from clilte import BasePlugin, PluginMetadata
 
-from arknights_toolkit.update.gacha import generate as generate_gacha
 from arknights_toolkit.update.record import generate as generate_record
 
 
@@ -28,6 +27,8 @@ class Update(BasePlugin):
 
     def dispatch(self, result: Arparma) -> bool | None:
         if result.find("update"):
+            from arknights_toolkit.update.gacha import generate as generate_gacha
+
             proxy = result.query("proxy.url")
             if result.find("update.gacha"):
                 asyncio.run(

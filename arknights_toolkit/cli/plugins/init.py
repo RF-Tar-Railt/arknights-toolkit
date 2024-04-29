@@ -15,8 +15,6 @@ from arclet.alconna import (
 from clilte import BasePlugin, PluginMetadata
 from nepattern import SwitchPattern
 
-from arknights_toolkit.update.main import fetch
-
 
 class Init(BasePlugin):
     def init(self) -> Alconna | str:
@@ -26,7 +24,7 @@ class Init(BasePlugin):
                 "--select|-S",
                 Args["flag", SwitchPattern({"IMG": 2, "REC": 1, "NON": 0})],
                 action=append,
-                help_text="选择特定的图片资源类型下载",
+                help_text="选择特定的资源类型下载",
                 compact=True,
             ),
             Option(
@@ -42,6 +40,8 @@ class Init(BasePlugin):
 
     def dispatch(self, result: Arparma) -> bool | None:
         if result.find("init"):
+            from arknights_toolkit.update.main import fetch
+
             select = sum(set(result.query("init.select.flag", [1, 2])))
             asyncio.run(fetch(select, result.query[bool]("init.cover.value", False), proxy=result.query[str]("proxy.url")))
             from arknights_toolkit import __version__
