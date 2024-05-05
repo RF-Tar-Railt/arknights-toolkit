@@ -2,6 +2,7 @@ import re
 from datetime import datetime
 from typing import List, Optional
 
+import ujson
 from httpx import AsyncClient, TimeoutException
 from httpx._types import ProxiesTypes
 from loguru import logger
@@ -10,19 +11,18 @@ import lxml.etree as etree
 from .model import UpdateChar, UpdateInfo
 
 
-pat1 = re.compile(r"(.*)(寻访|复刻).*?开启")
+pat1 = re.compile(r"(.*)寻访.*?开启")
 pat2 = re.compile(r"[【】]")
 pat3 = re.compile(r"[（：]")
 pat4 = re.compile(r"（|）：")
 pat5 = re.compile(r"（在.*?以.*?(\d+).*?倍.*?）")
 pat6 = re.compile(r"（占.*?的.*?(\d+).*?%）")
-pat7 = re.compile(r"(?P<start_m>\d{2})月(?P<start_d>\d{2})日 (?P<start_H>\d{2}):(?P<start_M>\d{2}) - (?P<end_m>\d{2})月(?P<end_d>\d{2})日 (?P<end_H>\d{2}):(?P<end_M>\d{2})")
+pat7 = re.compile(r"(?P<start_m>\d{2})月(?P<start_d>\d{2})日( )?(?P<start_H>\d{2}):(?P<start_M>\d{2}) - (?P<end_m>\d{2})月(?P<end_d>\d{2})日( )?(?P<end_H>\d{2}):(?P<end_M>\d{2})")
 
 
 def fetch_chars(dom):
     contents = dom.xpath(
-        "//div[@class='article-content']/p/text() | //div[@class='article-content']/p/span/text() | //div["
-        "@class='article-content']/div[@class='media-wrap image-wrap']/img/@src "
+        '//p/text() | //p/*/text() | //img[@data-width="1560"]/@src | //img[@class="media-wrap image-wrap"]/@src'
     )
     title = ""
     start = 0
@@ -55,7 +55,7 @@ def fetch_chars(dom):
                 chars.append(line)
             elif "★★" in line and "%" in lines[idx + 1]:
                 chars.append(line + lines[idx + 1])
-        pool_img = contents[index - 2]
+        pool_img = contents[0]
         r"""两类格式：用/分割，用\分割；★+(概率)+名字，★+名字+(概率)"""
         for char in chars:
             star = char.split("（")[0].count("★")
@@ -77,30 +77,33 @@ def fetch_chars(dom):
 
 async def get_info(proxy: Optional[ProxiesTypes] = None):
     async with AsyncClient(verify=False, proxies=proxy) as client:
-        result = (await client.get("https://ak.hypergryph.com/news.html")).text
+        result = (await client.get("https://ak.hypergryph.com/news")).text
         if not result:
             logger.warning("明日方舟 获取公告出错")
             raise TimeoutException("未找到明日方舟公告")
-        dom = etree.HTML(result, etree.HTMLParser())
-        activity_urls = dom.xpath(
-            "//ol[@class='articleList' and @data-category-key='ACTIVITY']/li/a/@href"
-        )
-        # 按照公告的时间排序
-        activity_urls.sort(key=lambda x: x.split("/")[-1], reverse=True)
-        for activity_url in activity_urls[:20]:  # 减少响应时间, 10个就够了
-            activity_url = f"https://ak.hypergryph.com{activity_url}"
-            result = (await client.get(activity_url)).text
-            if not result:
-                logger.warning(f"明日方舟 获取公告 {activity_url} 出错")
-                continue
+        dom = etree.HTML(result.replace("><", ">\n<"), etree.HTMLParser())
+        scripts = dom.xpath("//script")
+        try:
+            data = [elem for elem in scripts if elem.text.startswith("self.__next_f.push(")][-1].text[
+               len('self.__next_f.push([1,"c:[\\"$\\",\\"$L16\\",null,'):-len(']\n"])') - 1
+            ]
+            index = ujson.loads(data.replace('\\"', '"'))["initialData"]["ACTIVITY"]["list"]
+            for article in index:
+                if pat1.match(article["title"]):
+                    activity_url = f"https://ak.hypergryph.com/news/{article['cid']}"
+                    result = (await client.get(activity_url)).text
+                    if not result:
+                        logger.warning(f"明日方舟 获取公告 {activity_url} 出错")
+                        continue
 
-            """因为鹰角的前端太自由了，这里重写了匹配规则以尽可能避免因为前端乱七八糟而导致的重载失败"""
-            dom = etree.HTML(result, etree.HTMLParser())
-            title, start, end, pool_img, up_chars = fetch_chars(dom)
-            if not title or title.startswith("跨年欢庆"):
-                continue
-            logger.debug(f"成功获取 当前up信息; 当前up池: {title}")
-            return UpdateInfo(
-                title, start, end, up_chars[2], up_chars[1], up_chars[0], pool_img
-            )
-        raise TimeoutException("未找到明日方舟公告")
+                    """因为鹰角的前端太自由了，这里重写了匹配规则以尽可能避免因为前端乱七八糟而导致的重载失败"""
+                    dom = etree.HTML(result, etree.HTMLParser())
+                    title, start, end, pool_img, up_chars = fetch_chars(dom)
+                    if not title or title.startswith("跨年欢庆"):
+                        continue
+                    logger.debug(f"成功获取 当前up信息; 当前up池: {title}")
+                    return UpdateInfo(
+                        title, start, end, up_chars[2], up_chars[1], up_chars[0], pool_img
+                    )
+        except Exception as e:
+            raise TimeoutException("未找到明日方舟公告") from e
