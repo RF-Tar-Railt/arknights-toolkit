@@ -11,6 +11,7 @@ import lxml.etree as etree
 from .model import UpdateChar, UpdateInfo
 
 
+pat = re.compile(r"(.*)(复刻|活动).*?开启")
 pat1 = re.compile(r"(.*)寻访.*?开启")
 pat2 = re.compile(r"[【】]")
 pat3 = re.compile(r"[（：]")
@@ -47,7 +48,7 @@ def fetch_chars(dom):
         if not pat1.search(content):
             continue
         title = pat2.split(content)
-        title = "".join(title[1:-1]) if "-" in title else title[1]
+        title = f"{title[1]}-{title[-2]}" if len(title) > 3 else title[1]
         lines = [contents[index + _] for _ in range(8)] + [""]
         for idx, line in enumerate(lines):
             """因为 <p> 的诡异排版，所以有了下面的一段"""
@@ -55,7 +56,7 @@ def fetch_chars(dom):
                 chars.append(line)
             elif "★★" in line and "%" in lines[idx + 1]:
                 chars.append(line + lines[idx + 1])
-        pool_img = contents[0]
+        pool_img = contents[index - 1]
         r"""两类格式：用/分割，用\分割；★+(概率)+名字，★+名字+(概率)"""
         for char in chars:
             star = char.split("（")[0].count("★")
@@ -83,27 +84,30 @@ async def get_info(proxy: Optional[ProxiesTypes] = None):
             raise TimeoutException("未找到明日方舟公告")
         dom = etree.HTML(result.replace("><", ">\n<"), etree.HTMLParser())
         scripts = dom.xpath("//script")
-        try:
-            data = [elem for elem in scripts if elem.text.startswith("self.__next_f.push(")][-1].text[
-               len('self.__next_f.push([1,"c:[\\"$\\",\\"$L16\\",null,'):-len(']\n"])') - 1
-            ]
-            index = ujson.loads(data.replace('\\"', '"'))["initialData"]["ACTIVITY"]["list"]
-            for article in index:
-                if pat1.match(article["title"]):
-                    activity_url = f"https://ak.hypergryph.com/news/{article['cid']}"
-                    result = (await client.get(activity_url)).text
-                    if not result:
-                        logger.warning(f"明日方舟 获取公告 {activity_url} 出错")
-                        continue
+        data = [elem for elem in scripts if elem.text.startswith("self.__next_f.push(")][-1].text[
+           len('self.__next_f.push([1,"c:[\\"$\\",\\"$L16\\",null,'):-len(']\n"])') - 1
+        ]
+        index = ujson.loads(data.replace('\\"', '"'))["initialData"]["ACTIVITY"]["list"]
+        infos = []
+        for article in index:
+            if pat.match(article["title"]):
+                activity_url = f"https://ak.hypergryph.com/news/{article['cid']}"
+                result = (await client.get(activity_url)).text
+                if not result:
+                    logger.warning(f"明日方舟 获取公告 {activity_url} 出错")
+                    continue
 
-                    """因为鹰角的前端太自由了，这里重写了匹配规则以尽可能避免因为前端乱七八糟而导致的重载失败"""
-                    dom = etree.HTML(result, etree.HTMLParser())
-                    title, start, end, pool_img, up_chars = fetch_chars(dom)
-                    if not title or title.startswith("跨年欢庆"):
-                        continue
-                    logger.debug(f"成功获取 当前up信息; 当前up池: {title}")
-                    return UpdateInfo(
+                """因为鹰角的前端太自由了，这里重写了匹配规则以尽可能避免因为前端乱七八糟而导致的重载失败"""
+                dom = etree.HTML(result, etree.HTMLParser())
+                title, start, end, pool_img, up_chars = fetch_chars(dom)
+                if not title or title.startswith("跨年欢庆"):
+                    continue
+                logger.debug(f"成功获取 当前up信息; 当前up池: {title}")
+                infos.append(
+                    UpdateInfo(
                         title, start, end, up_chars[2], up_chars[1], up_chars[0], pool_img
                     )
-        except Exception as e:
-            raise TimeoutException("未找到明日方舟公告") from e
+                )
+        if infos:
+            return sorted(infos, key=lambda x: x.start, reverse=True)[0]
+        raise ValueError("未找到明日方舟公告")

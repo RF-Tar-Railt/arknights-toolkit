@@ -30,7 +30,7 @@ def make(table: dict, pool: dict):
 async def generate(file: Path, proxy: Optional[ProxiesTypes] = None):
     try:
         response = await get_info(proxy)
-    except (TimeoutException, ConnectError) as e:
+    except (TimeoutException, ConnectError, ValueError) as e:
         logger.warning(f"明日方舟 获取公告出错: {type(e)}({e})\n请检查网络或代理设置")
         return
     pool = {
