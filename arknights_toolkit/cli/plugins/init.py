@@ -52,7 +52,8 @@ class Init(BasePlugin):
             return False
         return True
 
-    def supply_options(self):
+    @classmethod
+    def supply_options(cls):
         return [
             Option(
                 "--proxy|-P", Args["url", str], help_text="设置代理地址", compact=True

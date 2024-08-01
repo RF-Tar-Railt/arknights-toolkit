@@ -97,6 +97,16 @@ class OperatorWordle:
             )
         return selected_name, selected
 
+    def prompt(self, uid: str):
+        data_path = self.base_dir / f"{uid}.json"
+        if not data_path.exists():
+            return
+        with data_path.open("r", encoding="utf-8") as _f:
+            sdata = json.load(_f)
+            selected: Operator = sdata["select"]
+        key = random.choice(["rarity", "org", "career", "race", "artist"])
+        return key, selected[key]  # type: ignore
+
     def guess(self, name: str, uid: str, max_guess: int = 8) -> Guess:
         data_path = self.base_dir / f"{uid}.json"
         if not data_path.exists():

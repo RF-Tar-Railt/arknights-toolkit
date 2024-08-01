@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import NamedTuple, List, TypedDict
+from typing import NamedTuple, List, TypedDict, Optional
 
 
 class UpdateChar(NamedTuple):
@@ -79,8 +79,8 @@ class PerUpCharInfo(TypedDict):
 class PoolDetail(TypedDict):
     availCharInfo: AvailCharInfo
     upCharInfo: PerUpCharInfo
-    weightUpCharInfoList: List[LimitedWUChar]
-    limitedChar: List[str]
+    weightUpCharInfoList: Optional[List[LimitedWUChar]]
+    limitedChar: Optional[List[str]]
     gachaObjGroupType: int
 
 

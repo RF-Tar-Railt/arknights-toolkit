@@ -6,7 +6,7 @@ from .plugins.clear import Clear
 
 arkkit = CommandLine(
     "Command Line Interface for Arknights Toolkit",
-    "0.6.0",
+    "0.7.0",
     rich=True,
     _name="arkkit",
     load_preset=True,

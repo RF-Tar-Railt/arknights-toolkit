@@ -52,3 +52,7 @@ class Clear(BasePlugin):
             logger.success("resource has been cleared")
             return False
         return True
+
+    @classmethod
+    def supply_options(cls) -> list[Option] | None:
+        return

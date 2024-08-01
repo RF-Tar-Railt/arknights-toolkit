@@ -49,13 +49,15 @@ def fetch_chars(dom):
             continue
         title = pat2.split(content)
         title = f"{title[1]}-{title[-2]}" if len(title) > 3 else title[1]
-        lines = [contents[index + _] for _ in range(8)] + [""]
+        lines = contents[index:index+20]
         for idx, line in enumerate(lines):
             """因为 <p> 的诡异排版，所以有了下面的一段"""
             if "★★" in line and "%" in line:
                 chars.append(line)
             elif "★★" in line and "%" in lines[idx + 1]:
                 chars.append(line + lines[idx + 1])
+            if line.startswith("https://"):
+                break
         pool_img = contents[index - 1]
         r"""两类格式：用/分割，用\分割；★+(概率)+名字，★+名字+(概率)"""
         for char in chars:

@@ -47,3 +47,7 @@ class Update(BasePlugin):
                 asyncio.run(generate_record(path, proxy))
             return False
         return True
+
+    @classmethod
+    def supply_options(cls):
+        return

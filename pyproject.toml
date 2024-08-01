@@ -10,7 +10,7 @@ dependencies = [
     "loguru>=0.7.2",
     "lxml>=5.1.0",
     "matplotlib>=3.7.5",
-    "cli-lite>=0.8.3",
+    "cli-lite>=0.10.0",
     "msgpack>=1.0.8",
     "ujson>=5.9.0",
 ]

@@ -1,4 +1,3 @@
-import sys
 from pathlib import Path
 from typing import Optional, List
 import ujson
@@ -10,7 +9,7 @@ from httpx._types import ProxiesTypes
 
 from .model import GachaTableIndex, GachaTableDetails
 
-INDEX_URL = "https://gh-proxy.com/github.com/Kengxxiao/ArknightsGameData/blob/master/zh_CN/gamedata/excel/gacha_table.json"
+INDEX_URL = "https://mirror.ghproxy.com/github.com/Kengxxiao/ArknightsGameData/blob/master/zh_CN/gamedata/excel/gacha_table.json"
 DETAILS_URL = "https://weedy.baka.icu/gacha_table.json"
 
 fetched_ops_path = Path(__file__).parent.parent.parent / "resource" / "info.json"
@@ -22,12 +21,12 @@ if fetched_ops_path.exists():
 
     tables = fetched_ops["table"]
 
-    if "id" not in tables["陈"]:
+    try:
+        mapping = {info["id"]: name for name, info in tables.items()}
+    except KeyError:
         logger.critical("operator resources has been outdated")
         logger.error("please execute `arkkit init --cover` in your command line")
         signal.raise_signal(signal.SIGINT)
-
-    mapping = {info["id"]: name for name, info in tables.items()}
 else:
     mapping = {}
 
@@ -55,8 +54,15 @@ async def fetch(proxy: Optional[ProxiesTypes] = None):
     )
     if detail is None:
         detail = random.choice([d for d in details_data if d["gachaPoolId"].startswith("NORM")])
+    # print(detail["gachaPoolDetail"]["detailInfo"])
+    current_limit = detail["gachaPoolDetail"]["detailInfo"]["limitedChar"]
+    weight_limit = detail["gachaPoolDetail"]["detailInfo"]["weightUpCharInfoList"]
     for chars in detail["gachaPoolDetail"]["detailInfo"]["availCharInfo"]["perAvailList"]:
         for char in chars["charIdList"]:
+            if current_limit and char in current_limit:
+                continue
+            if weight_limit and char in [char["charId"] for char in weight_limit]:
+                continue
             try:
                 table[mapping[char]] = chars["rarityRank"] + 1
             except KeyError:
