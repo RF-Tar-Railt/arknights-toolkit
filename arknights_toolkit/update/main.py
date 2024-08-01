@@ -1,15 +1,15 @@
 import re
-from enum import IntEnum
 from io import BytesIO
+from enum import IntEnum
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import List, Union, Optional
 
-import ujson as json
 import httpx
-from httpx._types import ProxiesTypes
-from loguru import logger
-import lxml.etree as etree
+import ujson as json
 from PIL import Image
+import lxml.etree as etree
+from loguru import logger
+from httpx._types import ProxiesTypes
 
 __all__ = ["fetch", "fetch_info", "fetch_image", "fetch_profile_image"]
 
@@ -68,7 +68,14 @@ if not info_path.exists():
             "龙门近卫局": ["炎-龙门", "炎-岁", "炎", "鲤氏侦探事务所", "企鹅物流"],
             "黑钢国际": ["汐斯塔", "哥伦比亚", "莱茵生命"],
             "卡西米尔": ["红松骑士团"],
-            "企鹅物流": ["炎-龙门", "炎-岁", "炎", "鲤氏侦探事务所", "龙门近卫局", "罗德岛"],
+            "企鹅物流": [
+                "炎-龙门",
+                "炎-岁",
+                "炎",
+                "鲤氏侦探事务所",
+                "龙门近卫局",
+                "罗德岛",
+            ],
             "深海猎人": ["阿戈尔", "罗德岛"],
             "炎": ["炎-龙门", "炎-岁", "龙门近卫局", "鲤氏侦探事务所", "企鹅物流"],
             "喀兰贸易": [],
@@ -76,7 +83,14 @@ if not info_path.exists():
             "巴别塔": ["罗德岛", "罗德岛-精英干员"],
             "哥伦比亚": ["汐斯塔", "黑钢国际", "莱茵生命"],
             "红松骑士团": ["卡西米尔", "罗德岛"],
-            "炎-岁": ["炎-龙门", "龙门近卫局", "炎", "鲤氏侦探事务所", "企鹅物流", "罗德岛"],
+            "炎-岁": [
+                "炎-龙门",
+                "龙门近卫局",
+                "炎",
+                "鲤氏侦探事务所",
+                "企鹅物流",
+                "罗德岛",
+            ],
             "乌萨斯": ["乌萨斯学生自治团"],
             "东": [],
             "行动预备组A6": [
@@ -130,7 +144,7 @@ if not info_path.exists():
                 "罗德岛-精英干员",
             ],
         },
-        "table": {}
+        "table": {},
     }
     with info_path.open("w+", encoding="utf-8") as f:
         json.dump(infos, f, ensure_ascii=False, indent=2)
@@ -142,24 +156,16 @@ async def fetch_image(name: str, client: httpx.AsyncClient, retry: int):
     while _retry:
         logger.debug(f"handle image of {name} ...")
         try:
-            resp = await client.get(
-                f"https://prts.wiki/w/文件:半身像_{name}_{level}.png", timeout=20.0
-            )
+            resp = await client.get(f"https://prts.wiki/w/文件:半身像_{name}_{level}.png", timeout=20.0)
             if resp.status_code != 200:
                 raise RuntimeError(f"status code: {resp.status_code}")
             root = etree.HTML(resp.text)
             sub = root.xpath(f'//img[@alt="文件:半身像 {name} {level}.png"]')[0]
             avatar: Image.Image = Image.open(
-                BytesIO(
-                    (
-                        await client.get(sub.xpath('@src').pop())
-                    ).content
-                )
+                BytesIO((await client.get(sub.xpath("@src").pop())).content)
             ).crop((20, 0, 124 + 20, 360))
             with (operate_path / f"{name}.png").open("wb") as f:
-                avatar.save(
-                    f, format="PNG", quality=100, subsampling=2, qtables="web_high"
-                )
+                avatar.save(f, format="PNG", quality=100, subsampling=2, qtables="web_high")
             logger.success(f"{name} image saved")
             return avatar
         except Exception as e:
@@ -175,9 +181,11 @@ async def fetch_profile_image(name: str, client: httpx.AsyncClient, retry: int):
         logger.debug(f"handle profile image of {name} ...")
         try:
             resp = await client.get(
-                f"https://prts.wiki/w/文件:头像_{name}_2.png"
-                if name == "阿米娅(近卫)"
-                else f"https://prts.wiki/w/文件:头像_{name}.png",
+                (
+                    f"https://prts.wiki/w/文件:头像_{name}_2.png"
+                    if name == "阿米娅(近卫)"
+                    else f"https://prts.wiki/w/文件:头像_{name}.png"
+                ),
                 timeout=20.0,
             )
             if resp.status_code != 200:
@@ -189,11 +197,7 @@ async def fetch_profile_image(name: str, client: httpx.AsyncClient, retry: int):
                 else f'//img[@alt="文件:头像 {name}.png"]'
             )[0]
             with (operate_path / f"profile_{name}.png").open("wb+") as img:
-                img.write(
-                    (
-                        await client.get(sub.xpath('@src').pop())
-                    ).content
-                )
+                img.write((await client.get(sub.xpath("@src").pop())).content)
             logger.success(f"{name} profile image saved")
             break
         except Exception as e:
@@ -205,9 +209,7 @@ async def fetch_profile_image(name: str, client: httpx.AsyncClient, retry: int):
 
 async def fetch_info(name: str, client: httpx.AsyncClient):
     logger.debug(f"handle info of {name} ...")
-    resp = await client.get(
-        f"https://prts.wiki/index.php?title={name}&action=edit", timeout=20.0
-    )
+    resp = await client.get(f"https://prts.wiki/index.php?title={name}&action=edit", timeout=20.0)
     root = etree.HTML(resp.text, etree.HTMLParser())
     sub = root.xpath('//textarea[@id="wpTextbox1"]')[0].text
     op_id = id_pat.search(sub)[1]  # type: ignore
@@ -269,29 +271,26 @@ async def fetch(
             return False
         root = etree.HTML(base.text, etree.HTMLParser())
         imgs: List[etree._Element] = (
-            root.xpath('//div[@class="mw-parser-output"]')[0]
-            .getchildren()[0]
-            .getchildren()
+            root.xpath('//div[@class="mw-parser-output"]')[0].getchildren()[0].getchildren()
         )
         names = []
         for img in imgs:
             img_elem: etree._Element = img.getchildren()[0]
             alt: str = img_elem.get("alt", "None")
-            if alt.startswith("头像") and "(集成战略)" not in alt and "预备干员" not in alt and alt[3:-4] not in {
-                "F91", "全知海猫", "小色", "海猫"
-            }:
+            if (
+                alt.startswith("头像")
+                and "(集成战略)" not in alt
+                and "预备干员" not in alt
+                and alt[3:-4] not in {"F91", "全知海猫", "小色", "海猫"}
+            ):
                 names.append(alt[3:-4])
         for name in names:
             try:
                 if name not in tables or cover:
                     tables[name] = await fetch_info(name, client)
-                if select & 0b10 and (
-                    not (operate_path / f"{name}.png").exists() or cover
-                ):
+                if select & 0b10 and (not (operate_path / f"{name}.png").exists() or cover):
                     await fetch_image(name, client, retry)
-                if select & 0b01 and (
-                    not (operate_path / f"profile_{name}.png").exists() or cover
-                ):
+                if select & 0b01 and (not (operate_path / f"profile_{name}.png").exists() or cover):
                     await fetch_profile_image(name, client, retry)
             except (httpx.TimeoutException, httpx.ConnectError) as e:
                 logger.error(f"拉取 {name} 失败: {type(e)}({e})\n请检查网络或代理设置")

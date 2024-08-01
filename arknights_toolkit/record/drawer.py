@@ -1,16 +1,16 @@
 import time
-from io import BytesIO
 from math import ceil
+from io import BytesIO
 from pathlib import Path
-from typing import Optional, Tuple, Union
+from typing import Tuple, Union, Optional
 
 import numpy as np
-from matplotlib import font_manager as fm
 from matplotlib import pyplot as plt
+from matplotlib import font_manager as fm
 from PIL import Image, ImageDraw, ImageFont
 
-from ..images import bottom_image, operators, rainbow_image, title_image
 from .style import *
+from ..images import operators, title_image, bottom_image, rainbow_image
 
 """ 
 利用PIL和PLT制图
@@ -153,16 +153,12 @@ def round_corner(
     circle_drawer.ellipse((0, 0, radii * 2, radii * 2), fill=random_back_color)
     # 贴圆
     corner_img.paste(circle.crop((0, 0, radii, radii)), (0, 0))  # 左上角
-    corner_img.paste(
-        circle.crop((radii, 0, radii * 2, radii)), (char_drawer_w - radii, 0)
-    )  # 右上角
+    corner_img.paste(circle.crop((radii, 0, radii * 2, radii)), (char_drawer_w - radii, 0))  # 右上角
     corner_img.paste(
         circle.crop((radii, radii, radii * 2, radii * 2)),
         (char_drawer_w - radii, char_drawer_h - radii),
     )  # 右下角
-    corner_img.paste(
-        circle.crop((0, radii, radii, radii * 2)), (0, char_drawer_h - radii)
-    )  # 左下角
+    corner_img.paste(circle.crop((0, radii, radii, radii * 2)), (0, char_drawer_h - radii))  # 左下角
     img_array = np.array(img)
     corner_array = np.array(corner_img)  # type: ignore
     # rcolor2是圆内的颜色，
@@ -182,9 +178,7 @@ class CharImage(BaseImage):
         char_type: str = "star6char",
         record_info: Optional[dict] = None,
         radii: int = 15,
-        background_color: Union[str, Tuple[float, float, float]] = char_drawer_p[
-            "bcolor"
-        ],
+        background_color: Union[str, Tuple[float, float, float]] = char_drawer_p["bcolor"],
         max_char_count: int = 20,
     ) -> None:
         super().__init__()
@@ -217,9 +211,7 @@ class CharImage(BaseImage):
         for i in range(self.cur_line_cnt):
             for j in range(2):
                 tmpw, tmph = indi_char_drawer_p["w"], indi_char_drawer_p["h"]
-                indi_drawer = ArkImageDrawer(
-                    tmpw, tmph, background_color=indi_char_drawer_p["bcolor"]
-                )
+                indi_drawer = ArkImageDrawer(tmpw, tmph, background_color=indi_char_drawer_p["bcolor"])
                 try:
                     char = self.char_info[2 * i + j]
                 except Exception:
@@ -227,9 +219,7 @@ class CharImage(BaseImage):
                 char_name = char["name"]
                 char_star = char["star"]
                 char_desc = char["desc"]
-                char_profile = self.generate_char_profile(
-                    char_name.split(" ")[0].strip(), char_star
-                )
+                char_profile = self.generate_char_profile(char_name.split(" ")[0].strip(), char_star)
                 # 绘制图片和文字
                 # 背景
                 backgrouond = Image.new("RGBA", size=(500, 500), color=op_fcolor)
@@ -247,9 +237,7 @@ class CharImage(BaseImage):
                     char_text_p["char_desc_fsize"],
                     fill=char_text_p["char_desc_color"],
                 )
-                self.char_drawer.dpaste(
-                    indi_drawer.img, indi_char_drawer_p[f"pos{j}"](i)
-                )
+                self.char_drawer.dpaste(indi_drawer.img, indi_char_drawer_p[f"pos{j}"](i))
         self.char_drawer.img = round_corner(
             self.char_drawer.img, self.radii
         )  # 白色区域透明可见，黑色区域不可见
@@ -266,20 +254,13 @@ class CharImage(BaseImage):
         key = f"profile_{char_name}"
         if key in operators:
             char_profile0 = operators[key]
-        elif (
-            file := Path(__file__).parent.parent
-            / "resource"
-            / "operators"
-            / f"{key}.png"
-        ).exists():
+        elif (file := Path(__file__).parent.parent / "resource" / "operators" / f"{key}.png").exists():
             char_profile0 = Image.open(file)
             operators[key] = char_profile0
         else:
             char_profile0 = Image.open(resource_path / "profile_海猫.png")
         # 重塑大小
-        char_profile0 = char_profile0.resize(
-            (char_text_p["profile_w"], char_text_p["profile_w"])
-        )
+        char_profile0 = char_profile0.resize((char_text_p["profile_w"], char_text_p["profile_w"]))
         # 边框底图 渐变可以在这里改
         if char_star != 6:
             char_profile = Image.new(
@@ -477,9 +458,7 @@ class ArkImage(BaseImage):
                 font_size=part_style["fsize"],
                 fill=part_style["color"],
             )
-        tmp_text_drawer.img = round_corner(
-            tmp_text_drawer.img, style["bimage"]["radii"]
-        )
+        tmp_text_drawer.img = round_corner(tmp_text_drawer.img, style["bimage"]["radii"])
         self.aid.dpaste(tmp_text_drawer.img, style["bimage"]["pos"])
 
     def draw_char_query(self, char_type: str = "star6char") -> None:
@@ -487,9 +466,7 @@ class ArkImage(BaseImage):
         不用plt
         先生成数个小画板，然后合成一个大画板，最后贴图
         """
-        ci = CharImage(
-            self.char_line_cnt, char_type, self.record_info, char_drawer_p["radii"]
-        )
+        ci = CharImage(self.char_line_cnt, char_type, self.record_info, char_drawer_p["radii"])
         char_img = ci.draw_chars()
         self.aid.dpaste(char_img, char_drawer_p[f"pos_{char_type}"])
 

@@ -3,13 +3,12 @@ from datetime import datetime
 from typing import List, Optional
 
 import ujson
-from httpx import AsyncClient, TimeoutException
-from httpx._types import ProxiesTypes
-from loguru import logger
 import lxml.etree as etree
+from loguru import logger
+from httpx._types import ProxiesTypes
+from httpx import AsyncClient, TimeoutException
 
 from .model import UpdateChar, UpdateInfo
-
 
 pat = re.compile(r"(.*)(复刻|活动).*?开启")
 pat1 = re.compile(r"(.*)寻访.*?开启")
@@ -18,7 +17,9 @@ pat3 = re.compile(r"[（：]")
 pat4 = re.compile(r"（|）：")
 pat5 = re.compile(r"（在.*?以.*?(\d+).*?倍.*?）")
 pat6 = re.compile(r"（占.*?的.*?(\d+).*?%）")
-pat7 = re.compile(r"(?P<start_m>\d{2})月(?P<start_d>\d{2})日( )?(?P<start_H>\d{2}):(?P<start_M>\d{2}) - (?P<end_m>\d{2})月(?P<end_d>\d{2})日( )?(?P<end_H>\d{2}):(?P<end_M>\d{2})")
+pat7 = re.compile(
+    r"(?P<start_m>\d{2})月(?P<start_d>\d{2})日( )?(?P<start_H>\d{2}):(?P<start_M>\d{2}) - (?P<end_m>\d{2})月(?P<end_d>\d{2})日( )?(?P<end_H>\d{2}):(?P<end_M>\d{2})"
+)
 
 
 def fetch_chars(dom):
@@ -33,23 +34,31 @@ def fetch_chars(dom):
     up_chars: List[List[UpdateChar]] = [[], [], []]
     for index, content in enumerate(contents):
         if not start and (match := pat7.search(content)):
-            start = int(datetime.now().replace(
-                month=int(match["start_m"]),
-                day=int(match["start_d"]),
-                hour=int(match["start_H"]),
-                minute=int(match["start_M"]),
-            ).timestamp())
-            end = int(datetime.now().replace(
-                month=int(match["end_m"]),
-                day=int(match["end_d"]),
-                hour=int(match["end_H"]),
-                minute=int(match["end_M"]),
-            ).timestamp())
+            start = int(
+                datetime.now()
+                .replace(
+                    month=int(match["start_m"]),
+                    day=int(match["start_d"]),
+                    hour=int(match["start_H"]),
+                    minute=int(match["start_M"]),
+                )
+                .timestamp()
+            )
+            end = int(
+                datetime.now()
+                .replace(
+                    month=int(match["end_m"]),
+                    day=int(match["end_d"]),
+                    hour=int(match["end_H"]),
+                    minute=int(match["end_M"]),
+                )
+                .timestamp()
+            )
         if not pat1.search(content):
             continue
         title = pat2.split(content)
         title = f"{title[1]}-{title[-2]}" if len(title) > 3 else title[1]
-        lines = contents[index:index+20]
+        lines = contents[index : index + 20]
         for idx, line in enumerate(lines):
             """因为 <p> 的诡异排版，所以有了下面的一段"""
             if "★★" in line and "%" in line:
@@ -87,7 +96,7 @@ async def get_info(proxy: Optional[ProxiesTypes] = None):
         dom = etree.HTML(result.replace("><", ">\n<"), etree.HTMLParser())
         scripts = dom.xpath("//script")
         data = [elem for elem in scripts if elem.text.startswith("self.__next_f.push(")][-1].text[
-           len('self.__next_f.push([1,"c:[\\"$\\",\\"$L16\\",null,'):-len(']\n"])') - 1
+            len('self.__next_f.push([1,"c:[\\"$\\",\\"$L16\\",null,') : -len(']\n"])') - 1
         ]
         index = ujson.loads(data.replace('\\"', '"'))["initialData"]["ACTIVITY"]["list"]
         infos = []
@@ -107,7 +116,13 @@ async def get_info(proxy: Optional[ProxiesTypes] = None):
                 logger.debug(f"成功获取 当前up信息; 当前up池: {title}")
                 infos.append(
                     UpdateInfo(
-                        title, start, end, up_chars[2], up_chars[1], up_chars[0], pool_img
+                        title,
+                        start,
+                        end,
+                        up_chars[2],
+                        up_chars[1],
+                        up_chars[0],
+                        pool_img,
                     )
                 )
         if infos:

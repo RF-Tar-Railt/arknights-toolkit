@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import NamedTuple, List, TypedDict, Optional
+from typing import List, Optional, TypedDict, NamedTuple
 
 
 class UpdateChar(NamedTuple):

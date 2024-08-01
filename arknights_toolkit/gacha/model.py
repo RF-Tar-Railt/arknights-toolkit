@@ -1,5 +1,5 @@
-from dataclasses import dataclass, field
-from typing import Dict, List, NamedTuple, TypedDict
+from dataclasses import field, dataclass
+from typing import Dict, List, TypedDict, NamedTuple
 
 
 class Operator(NamedTuple):

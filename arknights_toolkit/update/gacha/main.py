@@ -2,12 +2,12 @@ import json
 from pathlib import Path
 from typing import Optional
 
-from httpx import ConnectError, TimeoutException
-from httpx._types import ProxiesTypes
 from loguru import logger
+from httpx._types import ProxiesTypes
+from httpx import ConnectError, TimeoutException
 
-from .info import get_info
 from .data import fetch
+from .info import get_info
 
 
 def make(table: dict, pool: dict):

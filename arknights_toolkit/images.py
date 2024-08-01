@@ -1,5 +1,5 @@
-from pathlib import Path
 from typing import Dict
+from pathlib import Path
 
 from loguru import logger
 from PIL import Image, ImageEnhance

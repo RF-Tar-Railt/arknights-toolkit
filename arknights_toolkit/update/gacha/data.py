@@ -1,10 +1,11 @@
-from pathlib import Path
-from typing import Optional, List
-import ujson
-import signal
 import random
-from httpx import AsyncClient
+import signal
+from pathlib import Path
+from typing import List, Optional
+
+import ujson
 from loguru import logger
+from httpx import AsyncClient
 from httpx._types import ProxiesTypes
 
 from .model import GachaTableIndex, GachaTableDetails
@@ -43,7 +44,11 @@ async def fetch(proxy: Optional[ProxiesTypes] = None):
         details_data: List[GachaTableDetails] = ujson.loads(resp1.text)["gachaPoolClient"]
     pools = index_data["gachaPoolClient"]
     target_id = sorted(
-        (pool for pool in pools if pool["gachaPoolName"] not in SPECIAL_NAMES and not pool["gachaPoolName"].startswith("跨年欢庆")),
+        (
+            pool
+            for pool in pools
+            if pool["gachaPoolName"] not in SPECIAL_NAMES and not pool["gachaPoolName"].startswith("跨年欢庆")
+        ),
         key=lambda x: x["openTime"],
         reverse=True,
     )[0]["gachaPoolId"]

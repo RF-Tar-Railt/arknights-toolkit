@@ -4,18 +4,16 @@ from io import BytesIO
 from typing import List, Optional
 
 import httpx
-from httpx._types import ProxiesTypes
 from PIL import ImageDraw, ImageFont
+from httpx._types import ProxiesTypes
 
 from ..images import *
-from ..update.main import fetch_image, fetch_info
 from .model import Operator
+from ..update.main import fetch_info, fetch_image
 
 resource_path = Path(__file__).parent.parent / "resource"
 
-font_base = ImageFont.truetype(
-    str((resource_path / "HarmonyOS_Sans_SC_Medium.ttf").absolute()), 32
-)
+font_base = ImageFont.truetype(str((resource_path / "HarmonyOS_Sans_SC_Medium.ttf").absolute()), 32)
 
 
 async def simulate_image(ops: List[Operator], proxy: Optional[ProxiesTypes] = None):
@@ -54,7 +52,13 @@ async def simulate_image(ops: List[Operator], proxy: Optional[ProxiesTypes] = No
                     with (resource_path / "info.json").open("w+", encoding="utf-8") as jf:
                         table[name] = info
                         json.dump(infos, jf, ensure_ascii=False, indent=2)
-            except (TypeError, ValueError, IndexError, httpx.TimeoutException, httpx.ConnectError):
+            except (
+                TypeError,
+                ValueError,
+                IndexError,
+                httpx.TimeoutException,
+                httpx.ConnectError,
+            ):
                 logo: Image.Image = characters[random.choice(list(characters))].resize(
                     (96, 96), Image.Resampling.LANCZOS
                 )
@@ -64,9 +68,7 @@ async def simulate_image(ops: List[Operator], proxy: Optional[ProxiesTypes] = No
                 _draw = ImageDraw.Draw(avatar)
                 _draw.text((46, 100), "\n".join(name), fill="white", font=font_base)
             s_size = stars[rarity].size
-            star = stars[rarity].resize(
-                (int(s_size[0] * 0.6), int(47 * 0.6)), Image.Resampling.LANCZOS
-            )
+            star = stars[rarity].resize((int(s_size[0] * 0.6), int(47 * 0.6)), Image.Resampling.LANCZOS)
             s_offset = (offset - int(star.size[0])) // 2
 
             if rarity == 5:

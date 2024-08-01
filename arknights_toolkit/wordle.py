@@ -1,15 +1,15 @@
 import json
 import random
-from dataclasses import dataclass
 from io import BytesIO
 from pathlib import Path
-from typing import Dict, List, Literal, Optional, TypedDict, Union, overload
+from dataclasses import dataclass
+from typing import Dict, List, Union, Literal, Optional, TypedDict, overload
 
 from httpx._types import ProxiesTypes
 from PIL import Image, ImageDraw, ImageFont
 
-from .images import sign, resource_path
 from .update.main import fetch
+from .images import sign, resource_path
 
 __all__ = ["Operator", "Guess", "GuessUnit", "OperatorWordle"]
 
@@ -18,9 +18,7 @@ simple_sign = {"correct": "🟩", "down": "⬇", "up": "⬆", "wrong": "🟥", "
 state = Literal["correct", "down", "up", "wrong", "relate"]
 
 font_base = ImageFont.truetype(
-    str(
-        (Path(__file__).parent / "resource" / "HarmonyOS_Sans_SC_Medium.ttf").absolute()
-    ),
+    str((Path(__file__).parent / "resource" / "HarmonyOS_Sans_SC_Medium.ttf").absolute()),
     20,
 )
 
@@ -141,9 +139,7 @@ class OperatorWordle:
             res["rarity"] = "down"
 
         if guess_op["org"] != selected["org"]:
-            if selected_name in guess_op.get("relate", []) or name in selected.get(
-                "relate", []
-            ):
+            if selected_name in guess_op.get("relate", []) or name in selected.get("relate", []):
                 res["org"] = "relate"
             elif guess_op["org"] in self.relations[selected["org"]]:
                 res["org"] = "relate"
@@ -152,9 +148,7 @@ class OperatorWordle:
 
         if guess_op["career"] != selected["career"]:
             g_cs = guess_op["career"].split("-")
-            res["career"] = (
-                "relate" if selected["career"].startswith(g_cs[0]) else "wrong"
-            )
+            res["career"] = "relate" if selected["career"].startswith(g_cs[0]) else "wrong"
 
         if guess_op["race"] != selected["race"]:
             res["race"] = "wrong"
@@ -179,16 +173,12 @@ class OperatorWordle:
         return Guess("guessing", old_res + [res], selected_name, selected)
 
     @overload
-    def draw(self, res: Guess, *, max_guess: int = 8) -> bytes:
-        ...
+    def draw(self, res: Guess, *, max_guess: int = 8) -> bytes: ...
 
     @overload
-    def draw(self, res: Guess, simple: Literal[True], max_guess: int = 8) -> str:
-        ...
+    def draw(self, res: Guess, simple: Literal[True], max_guess: int = 8) -> str: ...
 
-    def draw(
-        self, res: Guess, simple: bool = False, max_guess: int = 8
-    ) -> Union[bytes, str]:
+    def draw(self, res: Guess, simple: bool = False, max_guess: int = 8) -> Union[bytes, str]:
         if simple:
             ans = f"干员猜猜乐 {len(res.lines)}/{max_guess}\n"
             for unit in res.lines:

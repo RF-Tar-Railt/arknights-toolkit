@@ -1,5 +1,5 @@
-from dataclasses import dataclass
 from typing import List
+from dataclasses import dataclass
 
 from msgpack import dumps
 
@@ -24,9 +24,7 @@ def encode_to_base58(input_: List[int]):
             i += 1
 
     len_ = leading_zero + len(encoding)
-    values = [
-        alphabet[0 if i < leading_zero else encoding[len_ - i - 1]] for i in range(len_)
-    ]
+    values = [alphabet[0 if i < leading_zero else encoding[len_ - i - 1]] for i in range(len_)]
     return "".join(values)
 
 
@@ -166,9 +164,7 @@ class Char:
                 self.bitmap.clear(PROFESSION_INDEX - index)
 
     def is_profession_empty(self):
-        return not self.bitmap.range(
-            PROFESSION_INDEX - len(PROFESSION), PROFESSION_INDEX
-        )
+        return not self.bitmap.range(PROFESSION_INDEX - len(PROFESSION), PROFESSION_INDEX)
 
     def select_all_position(self):
         for index, val in enumerate(POSITION):
@@ -207,12 +203,8 @@ class Char:
         return not self.bitmap.range(TAG_INDEX - len(TAG), TAG_INDEX)
 
     def dump(self):
-        profession_state = self.bitmap.range(
-            PROFESSION_INDEX - len(PROFESSION), PROFESSION_INDEX
-        )
-        position_state = self.bitmap.range(
-            POSITION_INDEX - len(POSITION), POSITION_INDEX
-        )
+        profession_state = self.bitmap.range(PROFESSION_INDEX - len(PROFESSION), PROFESSION_INDEX)
+        position_state = self.bitmap.range(POSITION_INDEX - len(POSITION), POSITION_INDEX)
         rarity_state = self.bitmap.range(RARITY_INDEX - len(RARITY), RARITY_INDEX)
         tag_state = self.bitmap.range(TAG_INDEX - len(TAG), TAG_INDEX)
         payload = {

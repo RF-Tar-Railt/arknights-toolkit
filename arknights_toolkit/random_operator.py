@@ -1,8 +1,8 @@
 import json
 import math
-from datetime import datetime
 from pathlib import Path
 from random import Random
+from datetime import datetime
 from typing import Dict, List, Literal, Optional, TypedDict
 
 
@@ -49,11 +49,7 @@ class RandomOperator:
         """
         :param path: 模板文件路径
         """
-        _path = (
-            Path(path)
-            if path
-            else Path(__file__).parent / "resource" / "operator_template.json"
-        )
+        _path = Path(path) if path else Path(__file__).parent / "resource" / "operator_template.json"
         with _path.open("r+", encoding="utf-8") as f:
             self.rand_operator_dict = json.load(f)
 
@@ -73,11 +69,7 @@ class RandomOperator:
         sex = "男" if rand.randint(1, 2) == 1 else "女"
         career_detail = career_info_dict["name"]
         level = rand.randint(3, 6)
-        cost = (
-            career_info_dict["cost_basic"]
-            + level
-            - (2 if rand.randint(0, 4) >= 2 else rand.randint(0, 1))
-        )
+        cost = career_info_dict["cost_basic"] + level - (2 if rand.randint(0, 4) >= 2 else rand.randint(0, 1))
         attack_speed = career_info_dict["attack_speed"]
         block = career_info_dict["block"]
         talent = career_info_dict["talent"]
@@ -90,18 +82,14 @@ class RandomOperator:
         if organize.endswith("homeland"):
             organize = rand.choice(self.rand_operator_dict["homeland"])
         height = rand.randint(0, 25) + (165 if sex == "男" else 155)
-        fight_exp = (
-            rand.randint(0, 6) if rand.randint(0, 10) > 2 else rand.randint(6, 20)
-        )
+        fight_exp = rand.randint(0, 6) if rand.randint(0, 10) > 2 else rand.randint(6, 20)
         skills = []
         for i in range(1, 2 if level < 4 else (3 if level < 6 else 4)):
             cover = rand.choice(self.rand_operator_dict["skill"]["cover"])
             trigger = rand.choice(self.rand_operator_dict["skill"]["trigger"])
             total = rand.randint(1, 120 if cover == "自动回复" else 24)
             start = total - rand.randint(1, total)
-            detail = rand.choice(
-                list(self.rand_operator_dict["skill"]["detail"].keys())
-            )
+            detail = rand.choice(list(self.rand_operator_dict["skill"]["detail"].keys()))
             if career_detail == "处决者":
                 skills.append(f"【{i}】被动\n  初始 0; 消耗 0; 持续 -")
                 continue
@@ -112,28 +100,19 @@ class RandomOperator:
             if detail == "need":
                 last = rand.randint(
                     1,
-                    math.ceil(total + 1 / 2)
-                    + (0 if rand.randint(0, 10) > 2 else rand.randint(1, start + 1)),
+                    math.ceil(total + 1 / 2) + (0 if rand.randint(0, 10) > 2 else rand.randint(1, start + 1)),
                 )
-                content = rand.choice(
-                    self.rand_operator_dict["skill"]["detail"][detail]
-                )
+                content = rand.choice(self.rand_operator_dict["skill"]["detail"][detail])
                 if content == "-":
-                    skills.append(
-                        f"【{i}】{cover}/{trigger}\n  初始 {start}; 消耗 {total}; 持续 {last}s"
-                    )
+                    skills.append(f"【{i}】{cover}/{trigger}\n  初始 {start}; 消耗 {total}; 持续 {last}s")
                 else:
                     skills.append(
                         f"【{i}】{cover}/手动触发\n  初始 {start}; 消耗 {total}; 持续 {last}s\n  {content}"
                     )
             else:
-                content = rand.choice(
-                    self.rand_operator_dict["skill"]["detail"][detail]
-                )
+                content = rand.choice(self.rand_operator_dict["skill"]["detail"][detail])
                 if content == "-":
-                    skills.append(
-                        f"【{i}】{cover}/{trigger}\n  初始 {start}; 消耗 {total}; 持续 0s"
-                    )
+                    skills.append(f"【{i}】{cover}/{trigger}\n  初始 {start}; 消耗 {total}; 持续 0s")
                 else:
                     if content.startswith("可充能") or content == "持续时间无限":
                         trigger = "自动触发"
@@ -143,9 +122,7 @@ class RandomOperator:
                         start = 0
                         if career_detail == "行商":
                             total = total if total < 15 else math.ceil(total / 5)
-                    elif content.startswith("可充能") or content.startswith(
-                        "可以在以下状态和初始状态间切换"
-                    ):
+                    elif content.startswith("可充能") or content.startswith("可以在以下状态和初始状态间切换"):
                         start = 0
                         total = total if total < 20 else math.ceil(total / 5)
                     skills.append(

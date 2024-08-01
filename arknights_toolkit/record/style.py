@@ -2,6 +2,7 @@
 本文件控制绘图样式
 非常不建议修改本文件中的内容
 """
+
 from math import ceil
 
 """输出图片的样式"""
@@ -270,20 +271,14 @@ title_img_p = {
 def get_bottom_img_pos():
     return (
         0,
-        int(
-            char_drawer_p["pos_newchar"][1] + char_drawer_p["h_int"] + 0.03 * base_img_h
-        ),
+        int(char_drawer_p["pos_newchar"][1] + char_drawer_p["h_int"] + 0.03 * base_img_h),
     )
 
 
 def get_date_text_pos():
     return (
         535,
-        int(
-            char_drawer_p["pos_newchar"][1]
-            + char_drawer_p["h_int"]
-            + 0.445 * base_img_h
-        ),
+        int(char_drawer_p["pos_newchar"][1] + char_drawer_p["h_int"] + 0.445 * base_img_h),
     )
 
 

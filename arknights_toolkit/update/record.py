@@ -3,9 +3,9 @@ from pathlib import Path
 from typing import List, Optional
 
 import httpx
-from httpx._types import ProxiesTypes
-from loguru import logger
 from lxml import etree
+from loguru import logger
+from httpx._types import ProxiesTypes
 
 
 async def get_prts_pool_info(pinfo: dict, proxy: Optional[ProxiesTypes] = None):

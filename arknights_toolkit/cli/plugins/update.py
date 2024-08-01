@@ -3,8 +3,8 @@ from __future__ import annotations
 import asyncio
 from pathlib import Path
 
-from arclet.alconna import Alconna, Args, Arparma, CommandMeta, Option
 from clilte import BasePlugin, PluginMetadata
+from arclet.alconna import Args, Option, Alconna, Arparma, CommandMeta
 
 from arknights_toolkit.update.record import generate as generate_record
 
@@ -21,9 +21,7 @@ class Update(BasePlugin):
         return alc
 
     def meta(self) -> PluginMetadata:
-        return PluginMetadata(
-            "update", "0.1.0", "update", ["update"], ["RF-Tar-Railt"], 20
-        )
+        return PluginMetadata("update", "0.1.0", "update", ["update"], ["RF-Tar-Railt"], 20)
 
     def dispatch(self, result: Arparma) -> bool | None:
         if result.find("update"):
@@ -32,16 +30,16 @@ class Update(BasePlugin):
             proxy = result.query("proxy.url")
             if result.find("update.gacha"):
                 asyncio.run(
-                    generate_gacha(Path(result.query[str]("update.gacha.path", "")).absolute(), proxy)
+                    generate_gacha(
+                        Path(result.query[str]("update.gacha.path", "")).absolute(),
+                        proxy,
+                    )
                 )
             if result.find("update.record"):
                 path = Path(
                     result.query(
                         "update.record.path",
-                        Path(__file__).parent.parent.parent
-                        / "resource"
-                        / "record"
-                        / "pool_info.json",
+                        Path(__file__).parent.parent.parent / "resource" / "record" / "pool_info.json",
                     )
                 ).absolute()
                 asyncio.run(generate_record(path, proxy))

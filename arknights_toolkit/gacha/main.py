@@ -1,25 +1,21 @@
-import asyncio
-import itertools
 import json
 import math
 import random
+import asyncio
+import itertools
 from io import BytesIO
 from pathlib import Path
-from typing import List, Dict, Tuple, Optional, Union
+from typing import Dict, List, Tuple, Union, Optional
 
 from httpx._types import ProxiesTypes
 from PIL import Image, ImageDraw, ImageFont
 
-from ..update.gacha import generate
 from ..util import random_pick_big
-from .model import GachaData, GachaUser, Operator
+from ..update.gacha import generate
+from .model import Operator, GachaData, GachaUser
 
 font_base = ImageFont.truetype(
-    str(
-        (
-            Path(__file__).parent.parent / "resource" / "HarmonyOS_Sans_SC_Medium.ttf"
-        ).absolute()
-    ),
+    str((Path(__file__).parent.parent / "resource" / "HarmonyOS_Sans_SC_Medium.ttf").absolute()),
     16,
 )
 
@@ -58,9 +54,7 @@ class ArknightsGacha:
                 asyncio.run(generate(self.file, proxy=self.proxy))
                 callback(None)
             else:
-                task = asyncio.create_task(
-                    generate(self.file, proxy=self.proxy), name="generate_gacha_data"
-                )
+                task = asyncio.create_task(generate(self.file, proxy=self.proxy), name="generate_gacha_data")
                 task.add_done_callback(callback)
         else:
             callback(None)
@@ -85,9 +79,7 @@ class ArknightsGacha:
         gacha_ranks: List[List[Operator]] = []
         cache = []
         for i in range(1, count + 1):
-            x = random_pick_big(
-                "六五四三", [user.six_per, self.five_per, self.four_per, self.three_per]
-            )
+            x = random_pick_big("六五四三", [user.six_per, self.five_per, self.four_per, self.three_per])
             ans = "".join(itertools.islice(x, 1))
             if ans != "六":
                 user.six_statis += 1
@@ -126,28 +118,19 @@ class ArknightsGacha:
             up_res = random.choice(self.data["up_six_list"] + self.data["up_limit"])
             for c in self.data["up_alert_limit"]:
                 card_list.extend([c for _ in range(5)])
-            card_list.extend(
-                [up_res for _ in range(int(len(card_list) * six_per / (1 - six_per)))]
-            )
+            card_list.extend([up_res for _ in range(int(len(card_list) * six_per / (1 - six_per)))])
             return Operator(random.choice(card_list), 6)
         if rank == "五":
             if (five_per := self.data["five_per"]) >= 1.0:
                 return Operator(random.choice(self.data["up_five_list"]), 5)
             up_res = random.choice(self.data["up_five_list"])
-            card_list.extend(
-                [up_res for _ in range(int(len(card_list) * five_per / (1 - five_per)))]
-            )
+            card_list.extend([up_res for _ in range(int(len(card_list) * five_per / (1 - five_per)))])
             return Operator(random.choice(card_list), 5)
         if rank == "四":
             if self.data["up_four_list"]:
                 four_per = self.data["four_per"]
                 up_res = random.choice(self.data["up_four_list"])
-                card_list.extend(
-                    [
-                        up_res
-                        for _ in range(int(len(card_list) * four_per / (1 - four_per)))
-                    ]
-                )
+                card_list.extend([up_res for _ in range(int(len(card_list) * four_per / (1 - four_per)))])
             return Operator(random.choice(card_list), 4)
         return Operator(random.choice(card_list), 3)
 
@@ -177,7 +160,10 @@ class ArknightsGacha:
         draw = ImageDraw.Draw(img)
 
         draw.text(
-            (tile, tile), "博士小心地拉开了包的拉链...会是什么呢？", fill="lightgrey", font=font_base
+            (tile, tile),
+            "博士小心地拉开了包的拉链...会是什么呢？",
+            fill="lightgrey",
+            font=font_base,
         )
 
         pool = f"当前卡池:【{self.data['name']}】"
@@ -196,12 +182,8 @@ class ArknightsGacha:
             for i in range(3, 0, -1):
                 d = int(color_base * 0.2) // 4
                 r = int(color_base * 0.8) + i * d
-                draw.rounded_rectangle(
-                    (xi - i, yi - i, xi + i, yj + i), radius=16, fill=(r, r, r)
-                )
-                draw.rounded_rectangle(
-                    (xj - i, yi - i, xj + i, yj + i), radius=16, fill=(r, r, r)
-                )
+                draw.rounded_rectangle((xi - i, yi - i, xi + i, yj + i), radius=16, fill=(r, r, r))
+                draw.rounded_rectangle((xj - i, yi - i, xj + i, yj + i), radius=16, fill=(r, r, r))
             for i in range(4, 0, -1):
                 r = (color_base // 4) * i
                 draw.rounded_rectangle(
@@ -245,9 +227,9 @@ class ArknightsGacha:
                     fill=self.color[operator.rarity],
                 )
                 half_color: Tuple[int, int, int] = (
-                    self.color[operator.rarity][0] // 2, 
-                    self.color[operator.rarity][1] // 2, 
-                    self.color[operator.rarity][2] // 2
+                    self.color[operator.rarity][0] // 2,
+                    self.color[operator.rarity][1] // 2,
+                    self.color[operator.rarity][2] // 2,
                 )
                 draw.text(
                     (base + width_offset, tile * (i + 3) + height_offset),

@@ -1,8 +1,8 @@
 from clilte import CommandLine
 
 from .plugins.init import Init
-from .plugins.update import Update
 from .plugins.clear import Clear
+from .plugins.update import Update
 
 arkkit = CommandLine(
     "Command Line Interface for Arknights Toolkit",

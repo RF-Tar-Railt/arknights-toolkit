@@ -1,17 +1,17 @@
-import asyncio
-import json
 import re
+import json
 import urllib
+import asyncio
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Tuple, Optional
 
 import httpx
 from httpx._types import ProxiesTypes
 
-from ..update.record import generate
-from .database import ArkDatabase
 from .drawer import ArkImage
 from .style import get_img_wh
+from .database import ArkDatabase
+from ..update.record import generate
 
 
 async def url_scrawler(token: str, channel: int, proxy: Optional[ProxiesTypes] = None) -> Tuple[str, list]:
@@ -38,9 +38,7 @@ async def url_scrawler(token: str, channel: int, proxy: Optional[ProxiesTypes] =
     async with httpx.AsyncClient(proxies=proxy) as client:
         try:
             for i in range(1, 11):
-                _data = await client.get(
-                    f"{base_url}&channelId={channel}&page={i}", headers=headers
-                )
+                _data = await client.get(f"{base_url}&channelId={channel}&page={i}", headers=headers)
                 res_data = _data.json()
                 if page_data := res_data["data"]["list"]:
                     draw_info_list.extend(page_data)
@@ -78,18 +76,14 @@ class ArkRecord:
         if not self.save_dir.is_dir():
             raise NotADirectoryError(save_dir)
         if pool_path is None:
-            self.pool_path = Path(__file__).parent.parent.joinpath(
-                "resource", "record", "pool_info.json"
-            )
+            self.pool_path = Path(__file__).parent.parent.joinpath("resource", "record", "pool_info.json")
         else:
             self.pool_path = Path(pool_path)
             if not self.pool_path.exists():
                 if not asyncio.events._get_running_loop():  # type: ignore
                     asyncio.run(generate(self.pool_path, self.proxy))
                 else:
-                    asyncio.create_task(
-                        generate(self.pool_path, self.proxy), name="generate_pool_info"
-                    )
+                    asyncio.create_task(generate(self.pool_path, self.proxy), name="generate_pool_info")
         self.database = ArkDatabase(db_path, max_char_count, max_pool_count)
 
     def user_token_save(self, player_token: str, user_session: str):
@@ -139,15 +133,11 @@ class ArkRecord:
             private_tot_pool_info = json.load(f)
 
         if record_info_list:
-            self.database.url_db_writer(
-                record_info_list, int(player_uid), private_tot_pool_info
-            )
+            self.database.url_db_writer(record_info_list, int(player_uid), private_tot_pool_info)
         # 读数据库
         self.database.check_view(int(player_uid))
         _real_count = self.database.create_view(pool_name, int(player_uid), count)
-        query_info = self.database.query_all_items(
-            pool_name, int(player_uid), _real_count
-        )
+        query_info = self.database.query_all_items(pool_name, int(player_uid), _real_count)
         # 生成图片
         aig = ArkImage(query_info, player_uid, get_img_wh(query_info), self.save_dir)
         aig.draw_all(player_name, _real_count)

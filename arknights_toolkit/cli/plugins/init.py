@@ -3,17 +3,9 @@ from __future__ import annotations
 import asyncio
 from pathlib import Path
 
-from arclet.alconna import (
-    Alconna,
-    Args,
-    Arparma,
-    CommandMeta,
-    Option,
-    append,
-    store_true,
-)
-from clilte import BasePlugin, PluginMetadata
 from nepattern import SwitchPattern
+from clilte import BasePlugin, PluginMetadata
+from arclet.alconna import Args, Option, Alconna, Arparma, CommandMeta, append, store_true
 
 
 class Init(BasePlugin):
@@ -28,7 +20,10 @@ class Init(BasePlugin):
                 compact=True,
             ),
             Option(
-                "--cover|-C", default=False, action=store_true, help_text="是否覆盖已有的资源文件"
+                "--cover|-C",
+                default=False,
+                action=store_true,
+                help_text="是否覆盖已有的资源文件",
             ),
             meta=CommandMeta("初始化干员数据与图片资源"),
         )
@@ -43,7 +38,13 @@ class Init(BasePlugin):
             from arknights_toolkit.update.main import fetch
 
             select = sum(set(result.query("init.select.flag", [1, 2])))
-            asyncio.run(fetch(select, result.query[bool]("init.cover.value", False), proxy=result.query[str]("proxy.url")))
+            asyncio.run(
+                fetch(
+                    select,
+                    result.query[bool]("init.cover.value", False),
+                    proxy=result.query[str]("proxy.url"),
+                )
+            )
             from arknights_toolkit import __version__
 
             base_path = Path(__file__).parent.parent.parent / "resource"
@@ -54,8 +55,4 @@ class Init(BasePlugin):
 
     @classmethod
     def supply_options(cls):
-        return [
-            Option(
-                "--proxy|-P", Args["url", str], help_text="设置代理地址", compact=True
-            )
-        ]
+        return [Option("--proxy|-P", Args["url", str], help_text="设置代理地址", compact=True)]

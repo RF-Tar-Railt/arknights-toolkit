@@ -1,11 +1,11 @@
 import json
-import platform
-import shutil
-import sqlite3 as sq
 import time
-from urllib.parse import unquote
+import shutil
+import platform
+import sqlite3 as sq
 from pathlib import Path
-from typing import Any, List, Callable, Optional, Tuple, TypedDict
+from urllib.parse import unquote
+from typing import Any, List, Tuple, Callable, Optional, TypedDict
 
 import httpx
 from loguru import logger
@@ -107,9 +107,7 @@ class ArkDatabase:
 
     def get_pool_in_view(self, player_uid: int):
         """获取视图中包含的卡池"""
-        self.cursor.execute(
-            f"select distinct {self.config['exclusive_field']} from v{player_uid}"
-        )
+        self.cursor.execute(f"select distinct {self.config['exclusive_field']} from v{player_uid}")
         return [item[0] for item in self.cursor.fetchall()]
 
     def get_record_count(self, player_uid: int):
@@ -299,9 +297,7 @@ class ArkDatabase:
         else:
             tmp_info["chars"].sort(key=lambda item: item["record_id"], reverse=True)
             tmp_info["chars"] = tmp_info["chars"][: self.max_char_count]
-            tmp_info[
-                "describe"
-            ] = f"获得了{len(tmp_info['chars'])}个{query_params['op_type']}\n"
+            tmp_info["describe"] = f"获得了{len(tmp_info['chars'])}个{query_params['op_type']}\n"
         return tmp_info
 
     def shuiwei_query(
@@ -394,9 +390,7 @@ class ArkDatabase:
         assert res, "请先使用 方舟抽卡帮助 查看帮助或使用 方舟抽卡token + 你的token 进行设置"
         return res
 
-    def url_db_writer(
-        self, draw_info_list: list, player_uid: int, private_tot_pool_info: dict
-    ):
+    def url_db_writer(self, draw_info_list: list, player_uid: int, private_tot_pool_info: dict):
         """
         将单次爬取到的寻访记录写入数据库
         """

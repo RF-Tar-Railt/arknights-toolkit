@@ -2,17 +2,11 @@ from __future__ import annotations
 
 from logging import log
 from pathlib import Path
+
 from loguru import logger
-from arclet.alconna import (
-    Alconna,
-    Args,
-    Arparma,
-    CommandMeta,
-    Option,
-    append,
-)
-from clilte import BasePlugin, PluginMetadata
 from nepattern import SwitchPattern
+from clilte import BasePlugin, PluginMetadata
+from arclet.alconna import Args, Option, Alconna, Arparma, CommandMeta, append
 
 
 class Clear(BasePlugin):

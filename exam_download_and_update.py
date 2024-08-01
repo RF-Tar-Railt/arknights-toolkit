@@ -1,8 +1,9 @@
-from arknights_toolkit.update.record import generate as record_generate
-from arknights_toolkit.update.gacha import generate as gacha_generate
-from arknights_toolkit.update.main import fetch
-from pathlib import Path
 import asyncio
+from pathlib import Path
+
+from arknights_toolkit.update.main import fetch
+from arknights_toolkit.update.gacha import generate as gacha_generate
+from arknights_toolkit.update.record import generate as record_generate
 
 
 async def main():
