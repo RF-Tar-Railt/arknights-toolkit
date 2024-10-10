@@ -11,7 +11,7 @@ from httpx._types import ProxiesTypes
 from .model import GachaTableIndex, GachaTableDetails
 
 INDEX_URL = "https://mirror.ghproxy.com/github.com/Kengxxiao/ArknightsGameData/blob/master/zh_CN/gamedata/excel/gacha_table.json"
-DETAILS_URL = "https://weedy.baka.icu/gacha_table.json"
+DETAILS_URL = "https://weedy.prts.wiki/gacha_table.json"
 
 fetched_ops_path = Path(__file__).parent.parent.parent / "resource" / "info.json"
 
