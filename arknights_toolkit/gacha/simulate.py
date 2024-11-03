@@ -43,7 +43,7 @@ async def simulate_image(ops: List[Operator], proxy: Optional[ProxiesTypes] = No
                     )
                 else:
                     info = await fetch_info(name, async_httpx)
-                    avatar = await fetch_image(name, async_httpx, 1)  # type: ignore
+                    avatar = await fetch_image(name, info["id"], async_httpx, 1)  # type: ignore
                     if not avatar:
                         raise ValueError
                     logo: Image.Image = characters[info["career"][:2]].resize(
