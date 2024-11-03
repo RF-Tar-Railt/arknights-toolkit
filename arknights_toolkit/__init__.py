@@ -2,7 +2,7 @@ from pathlib import Path
 
 from packaging import version
 
-__version__ = "0.7.6"
+__version__ = "0.7.7"
 
 
 def need_init():
