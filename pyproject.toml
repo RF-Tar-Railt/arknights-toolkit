@@ -20,7 +20,7 @@ license = {text = "AGPL-3.0"}
 dynamic = ["version"]
 
 [project.urls]
-repository = "https://github.com/RF-Tar-Railt/arknigths-toolkit"
+repository = "https://github.com/RF-Tar-Railt/arknights-toolkit"
 
 [project.scripts]
 arkkit = "arknights_toolkit.cli.__main__:main"
