@@ -78,7 +78,7 @@ if not info_path.exists():
             "巴别塔": ["罗德岛", "罗德岛-精英干员"],
             "哥伦比亚": ["汐斯塔", "黑钢国际", "莱茵生命"],
             "红松骑士团": ["卡西米尔"],
-            "炎-岁": ["炎-龙门", "龙门近卫局", "炎", "鲤氏侦探事务所", "企鹅物流", "罗德岛"],
+            "炎-岁": ["炎-龙门", "龙门近卫局", "炎", "鲤氏侦探事务所", "企鹅物流"],
             "乌萨斯": ["乌萨斯学生自治团"],
             "东": [],
             "行动预备组A6": [
@@ -121,7 +121,7 @@ if not info_path.exists():
             "萨米": [],
             "彩虹小队": [],
             "莱欧斯小队": [],
-            "使徒": ["罗德岛"],
+            "使徒": [],
             "玻利瓦尔": [],
             "行动预备组A4": [
                 "行动预备组A1",
@@ -290,7 +290,7 @@ async def fetch(
     with info_path.open("r+", encoding="utf-8") as _f:
         _infos = json.load(_f)
     tables = _infos.setdefault("table", {})
-    async with httpx.AsyncClient(verify=False, proxies=proxy) as client:
+    async with httpx.AsyncClient(verify=False, proxies=proxy, timeout=60) as client:
         queries: List[Dict[str, Chara]] = (await client.get(cargo_query)).json()["cargoquery"]
         tables.update({raw["title"]["干员"]: _transform(raw["title"]) for raw in queries})
         for name in tables:
