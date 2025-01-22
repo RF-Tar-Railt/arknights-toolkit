@@ -20,6 +20,7 @@ pat6 = re.compile(r"（占.*?的.*?(\d+).*?%）")
 pat7 = re.compile(
     r"(?P<start_m>\d{2})月(?P<start_d>\d{2})日( )?(?P<start_H>\d{2}):(?P<start_M>\d{2}) - (?P<end_m>\d{2})月(?P<end_d>\d{2})日( )?(?P<end_H>\d{2}):(?P<end_M>\d{2})"
 )
+pat8 = re.compile(r"\d{4}年\d{1,2}月\d{1,2}日")
 
 
 def fetch_chars(dom):
@@ -27,64 +28,78 @@ def fetch_chars(dom):
         '//p/text() | //p/*/text() | //img[@data-width="1560"]/@src | //img[@class="media-wrap image-wrap"]/@src'
     )
     title = ""
-    start = 0
-    end = 0
+    times = []
+    base = 0
     pool_img = ""
     chars: List[str] = []
     up_chars: List[List[UpdateChar]] = [[], [], []]
     for index, content in enumerate(contents):
-        if not start and (match := pat7.search(content)):
-            start = int(
-                datetime.now()
-                .replace(
-                    month=int(match["start_m"]),
-                    day=int(match["start_d"]),
-                    hour=int(match["start_H"]),
-                    minute=int(match["start_M"]),
-                )
-                .timestamp()
-            )
-            end = int(
-                datetime.now()
-                .replace(
-                    month=int(match["end_m"]),
-                    day=int(match["end_d"]),
-                    hour=int(match["end_H"]),
-                    minute=int(match["end_M"]),
-                )
-                .timestamp()
-            )
+        if match := pat7.search(content):
+            times.append(match)
+        if not base and (match1 := pat8.search(content)):
+            base = int(datetime.strptime(match1.group(), "%Y年%m月%d日").timestamp())
         if not pat1.search(content):
             continue
-        title = pat2.split(content)
-        title = f"{title[1]}-{title[-2]}" if len(title) > 3 else title[1]
-        lines = contents[index : index + 20]
-        for idx, line in enumerate(lines):
-            """因为 <p> 的诡异排版，所以有了下面的一段"""
-            if "★★" in line and "%" in line:
-                chars.append(line)
-            elif "★★" in line and "%" in lines[idx + 1]:
-                chars.append(line + lines[idx + 1])
-            if line.startswith("https://"):
-                break
-        pool_img = contents[index - 1]
-        r"""两类格式：用/分割，用\分割；★+(概率)+名字，★+名字+(概率)"""
-        for char in chars:
-            star = char.split("（")[0].count("★")
-            name = pat3.split(char)[1] if "★（" not in char else pat4.split(char)[2]
-            names = name.replace("\\", "/").split("/")
-            for name in names:
-                limit = False
-                if "[限定]" in name:
-                    limit = True
-                name = name.replace("[限定]", "").strip()
-                zoom = 1.0
-                if match := pat5.search(char) or pat6.search(char):
-                    zoom = float(match[1])
-                    zoom = zoom / 100 if zoom > 10 else zoom
-                up_chars[6 - star].append(UpdateChar(name, limit, zoom))
-        break  # 这里break会导致个问题：如果一个公告里有两个池子，会漏掉下面的池子，比如 5.19 的定向寻访。但目前我也没啥好想法解决
-    return title, start, end, pool_img, up_chars
+        if not chars:
+            title = pat2.split(content)
+            title = f"{title[1]}-{title[-2]}" if len(title) > 3 else title[1]
+            lines = contents[index : index + 20]
+            for idx, line in enumerate(lines):
+                """因为 <p> 的诡异排版，所以有了下面的一段"""
+                if "★★" in line and "%" in line:
+                    chars.append(line)
+                elif "★★" in line and "%" in lines[idx + 1]:
+                    chars.append(line + lines[idx + 1])
+                if line.startswith("https://"):
+                    break
+            pool_img = contents[index - 1]
+            r"""两类格式：用/分割，用\分割；★+(概率)+名字，★+名字+(概率)"""
+            for char in chars:
+                star = char.split("（")[0].count("★")
+                name = pat3.split(char)[1] if "★（" not in char else pat4.split(char)[2]
+                names = name.replace("\\", "/").split("/")
+                for name in names:
+                    limit = False
+                    if "[限定]" in name:
+                        limit = True
+                    name = name.replace("[限定]", "").strip()
+                    zoom = 1.0
+                    if match := pat5.search(char) or pat6.search(char):
+                        zoom = float(match[1])
+                        zoom = zoom / 100 if zoom > 10 else zoom
+                    up_chars[6 - star].append(UpdateChar(name, limit, zoom))
+        # break  # 这里break会导致个问题：如果一个公告里有两个池子，会漏掉下面的池子，比如 5.19 的定向寻访。但目前我也没啥好想法解决
+    start = (
+        min(
+            datetime.fromtimestamp(base)
+            .replace(
+                month=int(match["start_m"]),
+                day=int(match["start_d"]),
+                hour=int(match["start_H"]),
+                minute=int(match["start_M"]),
+            )
+            .timestamp()
+            for match in times
+        )
+        if times
+        else 0
+    )
+    end = (
+        max(
+            datetime.fromtimestamp(base)
+            .replace(
+                month=int(match["end_m"]),
+                day=int(match["end_d"]),
+                hour=int(match["end_H"]),
+                minute=int(match["end_M"]),
+            )
+            .timestamp()
+            for match in times
+        )
+        if times
+        else 0
+    )
+    return title, int(start), int(end), pool_img, up_chars
 
 
 async def get_info(proxy: Optional[ProxiesTypes] = None):
