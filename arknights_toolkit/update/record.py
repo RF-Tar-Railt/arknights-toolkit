@@ -5,13 +5,13 @@ from typing import List, Optional
 import httpx
 from lxml import etree
 from loguru import logger
-from httpx._types import ProxiesTypes
+from httpx._types import ProxyTypes
 
 
-async def get_prts_pool_info(pinfo: dict, proxy: Optional[ProxiesTypes] = None):
+async def get_prts_pool_info(pinfo: dict, proxy: Optional[ProxyTypes] = None):
     """获取prts中的卡池信息"""
     prts_url = "https://prts.wiki/w/%E5%8D%A1%E6%B1%A0%E4%B8%80%E8%A7%88/%E9%99%90%E6%97%B6%E5%AF%BB%E8%AE%BF"
-    async with httpx.AsyncClient(verify=False, proxies=proxy) as client:
+    async with httpx.AsyncClient(verify=False, proxy=proxy) as client:
         prts_res = (await client.get(prts_url)).text
         root = etree.HTML(prts_res, etree.HTMLParser())
         # 限定
@@ -31,7 +31,7 @@ async def get_prts_pool_info(pinfo: dict, proxy: Optional[ProxiesTypes] = None):
         return pinfo
 
 
-async def generate(file: Path, proxy: Optional[ProxiesTypes] = None):
+async def generate(file: Path, proxy: Optional[ProxyTypes] = None):
     """更新卡池信息"""
     pool_info = {
         "all": {"is_exclusive": False},

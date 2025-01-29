@@ -6,7 +6,7 @@ from typing import List, Optional
 import ujson
 from loguru import logger
 from httpx import AsyncClient
-from httpx._types import ProxiesTypes
+from httpx._types import ProxyTypes
 
 from .model import GachaTableIndex, GachaTableDetails
 
@@ -36,8 +36,8 @@ rarity_table_file = Path(__file__).parent.parent.parent / "resource" / "gacha" /
 SPECIAL_NAMES = {"前路回响", "适合多种场合的强力干员"}
 
 
-async def fetch(proxy: Optional[ProxiesTypes] = None):
-    async with AsyncClient(verify=False, proxies=proxy, follow_redirects=True) as client:
+async def fetch(proxy: Optional[ProxyTypes] = None):
+    async with AsyncClient(verify=False, proxy=proxy, follow_redirects=True) as client:
         resp = await client.get(INDEX_URL)
         index_data: GachaTableIndex = ujson.loads(resp.text)
         resp1 = await client.get(DETAILS_URL)

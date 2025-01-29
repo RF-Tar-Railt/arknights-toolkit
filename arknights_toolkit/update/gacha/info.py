@@ -5,7 +5,7 @@ from typing import List, Optional
 import ujson
 import lxml.etree as etree
 from loguru import logger
-from httpx._types import ProxiesTypes
+from httpx._types import ProxyTypes
 from httpx import AsyncClient, TimeoutException
 
 from .model import UpdateChar, UpdateInfo
@@ -102,8 +102,8 @@ def fetch_chars(dom):
     return title, int(start), int(end), pool_img, up_chars
 
 
-async def get_info(proxy: Optional[ProxiesTypes] = None):
-    async with AsyncClient(verify=False, proxies=proxy) as client:
+async def get_info(proxy: Optional[ProxyTypes] = None):
+    async with AsyncClient(verify=False, proxy=proxy) as client:
         result = (await client.get("https://ak.hypergryph.com/news")).text
         if not result:
             logger.warning("明日方舟 获取公告出错")

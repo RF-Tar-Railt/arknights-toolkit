@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Optional
 
 from loguru import logger
-from httpx._types import ProxiesTypes
+from httpx._types import ProxyTypes
 from httpx import ConnectError, TimeoutException
 
 from .data import fetch
@@ -27,7 +27,7 @@ def make(table: dict, pool: dict):
             pool["operators"]["四"].append(name)
 
 
-async def generate(file: Path, proxy: Optional[ProxiesTypes] = None):
+async def generate(file: Path, proxy: Optional[ProxyTypes] = None):
     try:
         response = await get_info(proxy)
     except (TimeoutException, ConnectError, ValueError) as e:

@@ -5,7 +5,7 @@ from pathlib import Path
 from dataclasses import dataclass
 from typing import Dict, List, Union, Literal, Optional, TypedDict, overload
 
-from httpx._types import ProxiesTypes
+from httpx._types import ProxyTypes
 from PIL import Image, ImageDraw, ImageFont
 
 from .update.main import fetch
@@ -60,7 +60,7 @@ class OperatorWordle:
             self.relations: Dict[str, List[str]] = _data["org_related"]
             self.tables: Dict[str, Operator] = _data["table"]
 
-    async def update(self, proxy: Optional[ProxiesTypes] = None):
+    async def update(self, proxy: Optional[ProxyTypes] = None):
         await fetch(0, proxy=proxy)
         with (resource_path / "info.json").open("r", encoding="utf-8") as f:
             _data = json.load(f)

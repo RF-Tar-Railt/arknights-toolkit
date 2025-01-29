@@ -5,7 +5,7 @@ from typing import List, Optional
 
 import httpx
 from PIL import ImageDraw, ImageFont
-from httpx._types import ProxiesTypes
+from httpx._types import ProxyTypes
 
 from ..images import *
 from .model import Operator
@@ -16,7 +16,7 @@ resource_path = Path(__file__).parent.parent / "resource"
 font_base = ImageFont.truetype(str((resource_path / "HarmonyOS_Sans_SC_Medium.ttf").absolute()), 32)
 
 
-async def simulate_image(ops: List[Operator], proxy: Optional[ProxiesTypes] = None):
+async def simulate_image(ops: List[Operator], proxy: Optional[ProxyTypes] = None):
     """
     依据抽卡结果生成模拟十连图片
 
@@ -31,7 +31,7 @@ async def simulate_image(ops: List[Operator], proxy: Optional[ProxiesTypes] = No
     with (resource_path / "info.json").open("r", encoding="utf-8") as f:
         infos = json.load(f)
         table = infos["table"]
-    async with httpx.AsyncClient(verify=False, proxies=proxy) as async_httpx:
+    async with httpx.AsyncClient(verify=False, proxy=proxy) as async_httpx:
         for op in ops[:10]:
             name = op.name
             rarity = op.rarity - 1

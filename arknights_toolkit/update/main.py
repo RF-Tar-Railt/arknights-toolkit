@@ -10,7 +10,7 @@ import ujson as json
 from PIL import Image
 import lxml.etree as etree
 from loguru import logger
-from httpx._types import ProxiesTypes
+from httpx._types import ProxyTypes
 
 __all__ = ["fetch", "fetch_info", "fetch_image", "fetch_profile_image"]
 
@@ -283,14 +283,14 @@ async def fetch(
     select: Union[int, FetchFlag] = 0b11,
     cover: bool = False,
     retry: int = 5,
-    proxy: Optional[ProxiesTypes] = None,
+    proxy: Optional[ProxyTypes] = None,
 ):
     if select < 0 or select > 3:
         raise ValueError(select)
     with info_path.open("r+", encoding="utf-8") as _f:
         _infos = json.load(_f)
     tables = _infos.setdefault("table", {})
-    async with httpx.AsyncClient(verify=False, proxies=proxy, timeout=60) as client:
+    async with httpx.AsyncClient(verify=False, proxy=proxy, timeout=60) as client:
         queries: List[Dict[str, Chara]] = (await client.get(cargo_query)).json()["cargoquery"]
         tables.update({raw["title"]["干员"]: _transform(raw["title"]) for raw in queries})
         for name in tables:

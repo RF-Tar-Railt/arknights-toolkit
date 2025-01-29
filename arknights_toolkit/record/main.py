@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Tuple, Optional
 
 import httpx
-from httpx._types import ProxiesTypes
+from httpx._types import ProxyTypes
 
 from .drawer import ArkImage
 from .style import get_img_wh
@@ -14,7 +14,7 @@ from .database import ArkDatabase
 from ..update.record import generate
 
 
-async def url_scrawler(token: str, channel: int, proxy: Optional[ProxiesTypes] = None) -> Tuple[str, list]:
+async def url_scrawler(token: str, channel: int, proxy: Optional[ProxyTypes] = None) -> Tuple[str, list]:
     """_summary_
     爬取官网抽卡记录
     Args:
@@ -35,7 +35,7 @@ async def url_scrawler(token: str, channel: int, proxy: Optional[ProxiesTypes] =
         "Language/zh_CN webview/0"
     )
     headers = {"User-Agent": user_agent}
-    async with httpx.AsyncClient(proxies=proxy) as client:
+    async with httpx.AsyncClient(proxy=proxy) as client:
         try:
             for i in range(1, 11):
                 _data = await client.get(f"{base_url}&channelId={channel}&page={i}", headers=headers)
@@ -59,7 +59,7 @@ class ArkRecord:
         db_path: Optional[str] = None,
         max_char_count: int = 20,
         max_pool_count: int = 8,
-        proxy: Optional[ProxiesTypes] = None,
+        proxy: Optional[ProxyTypes] = None,
     ):
         """
         明日方舟抽卡数据分析

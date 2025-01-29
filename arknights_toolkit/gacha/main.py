@@ -7,7 +7,7 @@ from io import BytesIO
 from pathlib import Path
 from typing import Dict, List, Tuple, Union, Optional
 
-from httpx._types import ProxiesTypes
+from httpx._types import ProxyTypes
 from PIL import Image, ImageDraw, ImageFont
 
 from ..util import random_pick_big
@@ -35,7 +35,7 @@ class ArknightsGacha:
         3: (0x09, 0xB3, 0xF7),  # 09b3f7
     }
 
-    def __init__(self, file: Union[str, Path], proxy: Optional[ProxiesTypes] = None):
+    def __init__(self, file: Union[str, Path], proxy: Optional[ProxyTypes] = None):
         """
         :param file: 卡池信息文件
         """
