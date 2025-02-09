@@ -141,7 +141,8 @@ def round_corner(
     """
     char_drawer_w, char_drawer_h = img.size
     random_back_color = (74, 240, 103, 255)  # 随机取值，防止冲突
-    back_color = hex2rgb(back_color)
+    if isinstance(back_color, str):
+        back_color = hex2rgb(back_color)
     back_color_a = (back_color[0], back_color[1], back_color[2], 255)
     # 创建等同img大小的画布，背景色为随机色1
     corner_img: Image.Image = Image.new("RGBA", img.size, random_back_color)
@@ -162,8 +163,7 @@ def round_corner(
     img_array = np.array(img)
     corner_array = np.array(corner_img)  # type: ignore
     # rcolor2是圆内的颜色，
-    img = np.where(corner_array == back_color_a, corner_array, img_array)
-    return Image.fromarray(img, mode="RGBA")
+    return Image.fromarray(np.where(corner_array == back_color_a, corner_array, img_array), mode="RGBA")
 
 
 class BaseImage:  # 作图基类，目前无内容
@@ -413,7 +413,7 @@ class ArkImage(BaseImage):
         record_info = self.info_type_dict[query_type]["info"]
         style = self.info_type_dict[query_type]["pie_style"]
         fig, ax = plt.subplots()
-        _, l_text, p_text = ax.pie(
+        _, l_text, p_text = ax.pie(  # type: ignore
             record_info["count"],
             labels=record_info["desc"],  # todo:labels 还要修改 加上具体数值
             colors=pie_colors,
@@ -423,10 +423,10 @@ class ArkImage(BaseImage):
             autopct="%0.2f%%",
         )
         for t in l_text:  # 设置字体大小
-            t.set_size(int(style["text_fsize"]))
+            t.set_fontsize(int(style["text_fsize"]))
             t.set_color(style["text_fcolor"])
         for t in p_text:  # 设置字体大小
-            t.set_size(int(style["percent_fsize"]))
+            t.set_fontsize(int(style["percent_fsize"]))
             t.set_color(style["percent_fcolor"])
         ax.set_title(
             self.info_type_dict[query_type]["cn_desc"],
