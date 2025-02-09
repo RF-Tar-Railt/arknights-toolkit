@@ -10,7 +10,8 @@ from httpx._types import ProxyTypes
 
 from .model import GachaTableIndex, GachaTableDetails
 
-INDEX_URL = "https://mirror.ghproxy.com/github.com/Kengxxiao/ArknightsGameData/blob/master/zh_CN/gamedata/excel/gacha_table.json"
+INDEX_URL_PROXIED = "https://ghfast.top/github.com/Kengxxiao/ArknightsGameData/blob/master/zh_CN/gamedata/excel/gacha_table.json"
+INDEX_URL = "https://raw.githubusercontent.com/Kengxxiao/ArknightsGameData/refs/heads/master/zh_CN/gamedata/excel/gacha_table.json"
 DETAILS_URL = "https://weedy.prts.wiki/gacha_table.json"
 
 fetched_ops_path = Path(__file__).parent.parent.parent / "resource" / "info.json"
@@ -38,7 +39,7 @@ SPECIAL_NAMES = {"前路回响", "适合多种场合的强力干员"}
 
 async def fetch(proxy: Optional[ProxyTypes] = None):
     async with AsyncClient(verify=False, proxy=proxy, follow_redirects=True) as client:
-        resp = await client.get(INDEX_URL)
+        resp = await client.get(INDEX_URL if proxy else INDEX_URL_PROXIED)
         index_data: GachaTableIndex = ujson.loads(resp.text)
         resp1 = await client.get(DETAILS_URL)
         details_data: List[GachaTableDetails] = ujson.loads(resp1.text)["gachaPoolClient"]

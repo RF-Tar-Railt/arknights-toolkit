@@ -20,7 +20,7 @@ pat6 = re.compile(r"（占.*?的.*?(\d+).*?%）")
 pat7 = re.compile(
     r"(?P<start_m>\d{2})月(?P<start_d>\d{2})日( )?(?P<start_H>\d{2}):(?P<start_M>\d{2}) - (?P<end_m>\d{2})月(?P<end_d>\d{2})日( )?(?P<end_H>\d{2}):(?P<end_M>\d{2})"
 )
-pat8 = re.compile(r"\d{4}年\d{1,2}月\d{1,2}日")
+pat8 = re.compile(r"\d{4}年\d{1,2}月\d{1,2}日$")
 
 
 def fetch_chars(dom):
