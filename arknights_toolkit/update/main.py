@@ -51,8 +51,8 @@ if not info_path.exists():
             "萨尔贡": [],
             "贾维团伙": ["叙拉古"],
             "莱茵生命": ["哥伦比亚", "黑钢国际", "汐斯塔"],
-            "深池": ["维多利亚"],
-            "维多利亚": ["格拉斯哥帮", "深池"],
+            "塔拉": ["维多利亚"],
+            "维多利亚": ["格拉斯哥帮", "塔拉"],
             "鲤氏侦探事务所": ["炎-龙门", "炎-岁", "炎", "龙门近卫局", "企鹅物流"],
             "罗德岛-精英干员": [
                 "行动预备组A4",
@@ -217,6 +217,8 @@ async def fetch_info(name: str, client: httpx.AsyncClient):
         org3 = ""
     org = org3 or org2 or org1
     org = org or "/"
+    if org == "深池":
+        org = "塔拉"
     art = art_pat.search(sub)[1]  # type: ignore
     logger.success(f"{name}({char}) info fetched")
     return {
@@ -266,6 +268,8 @@ class Chara(TypedDict):
 
 def _transform(data: Chara):
     org = data["团队"] or data["组织"] or data["国家"]
+    if org == "深池":
+        org = "塔拉"
     return {
         "id": data["charid"],
         "rarity": int(data["稀有度"]),
