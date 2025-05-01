@@ -53,6 +53,7 @@ async def simulate_image(ops: List[Operator], proxy: Optional[ProxyTypes] = None
                         table[name] = info
                         json.dump(infos, jf, ensure_ascii=False, indent=2)
             except (
+                AttributeError,
                 TypeError,
                 ValueError,
                 IndexError,
