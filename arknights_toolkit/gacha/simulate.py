@@ -27,7 +27,8 @@ async def simulate_image(ops: List[Operator], proxy: Optional[ProxyTypes] = None
     base = 20
     offset = 124
     l_offset = 14
-    back_img = Image.open(resource_path / "gacha" / "back_image.png")
+    back_img = Image.new("RGB", (1280, 720), (0, 0, 0))
+    back_img.paste(Image.open(resource_path / "gacha" / "back_image.png"), (0, 0))
     with (resource_path / "info.json").open("r", encoding="utf-8") as f:
         infos = json.load(f)
         table = infos["table"]
