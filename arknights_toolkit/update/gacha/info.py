@@ -3,9 +3,9 @@ from datetime import datetime
 from typing import List, Optional
 
 import ujson
-import lxml.etree as etree
 from loguru import logger
 from httpx._types import ProxyTypes
+from selectolax.parser import HTMLParser
 from httpx import AsyncClient, TimeoutException
 
 from .model import UpdateChar, UpdateInfo
@@ -23,9 +23,12 @@ pat7 = re.compile(
 pat8 = re.compile(r"\d{4}年\d{1,2}月\d{1,2}日$")
 
 
-def fetch_chars(dom):
-    contents = dom.xpath(
-        '//p/text() | //p/*/text() | //img[@data-width="1560"]/@src | //img[@class="media-wrap image-wrap"]/@src'
+def fetch_chars(dom: HTMLParser):
+    contents: list = [node.text(strip=True) for node in dom.css("p")]
+    contents.extend([node.text(strip=True) for node in dom.css("p > *")])
+    contents.extend(
+        node.attributes.get("src", "")
+        for node in dom.css('img[data-width="1560"], img.media-wrap.image-wrap')
     )
     title = ""
     times = []
@@ -68,7 +71,7 @@ def fetch_chars(dom):
                         zoom = float(match[1])
                         zoom = zoom / 100 if zoom > 10 else zoom
                     up_chars[6 - star].append(UpdateChar(name, limit, zoom))
-        # break  # 这里break会导致个问题：如果一个公告里有两个池子，会漏掉下面的池子，比如 5.19 的定向寻访。但目前我也没啥好想法解决
+        # break  # 这里break会导致个问题：如果一个公告里有两个池子，会漏掉下面的池子，比如 5.19 的定向寻访。但目前我也没啥好���法解决
     start = (
         min(
             datetime.fromtimestamp(base)
@@ -108,12 +111,15 @@ async def get_info(proxy: Optional[ProxyTypes] = None):
         if not result:
             logger.warning("明日方舟 获取公告出错")
             raise TimeoutException("未找到明日方舟公告")
-        dom = etree.HTML(result.replace("><", ">\n<"), etree.HTMLParser())
-        scripts = dom.xpath("//script")
-        data = [elem for elem in scripts if elem.text.startswith("self.__next_f.push(")][-1].text[
-            len('self.__next_f.push([1,"c:[\\"$\\",\\"$L16\\",null,') : -len(']\n"])') - 1
-        ]
-        index = ujson.loads(data.replace('\\"', '"'))["initialData"]["ACTIVITY"]["list"]
+        dom = HTMLParser(result.replace("><", ">\n<"))
+        scripts = dom.css("script")
+        code = (
+            [elem for elem in scripts if elem.text(strip=True).startswith("self.__next_f.push(")][-1]
+            .text()
+            .replace('\\"', '"')
+        )
+        init_char_index = code[:100].find("initialData") - 2
+        index = ujson.loads(code[init_char_index : -len(']\n"])') - 1])["initialData"]["ACTIVITY"]["list"]
         infos = []
         for article in index:
             if pat.match(article["title"]):
@@ -124,7 +130,7 @@ async def get_info(proxy: Optional[ProxyTypes] = None):
                     continue
 
                 """因为鹰角的前端太自由了，这里重写了匹配规则以尽可能避免因为前端乱七八糟而导致的重载失败"""
-                dom = etree.HTML(result, etree.HTMLParser())
+                dom = HTMLParser(result)
                 title, start, end, pool_img, up_chars = fetch_chars(dom)
                 if not title or title.startswith("跨年欢庆"):
                     continue

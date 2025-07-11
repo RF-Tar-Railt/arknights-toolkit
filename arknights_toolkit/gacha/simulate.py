@@ -4,8 +4,8 @@ from io import BytesIO
 from typing import List, Optional
 
 import httpx
-from PIL import ImageDraw, ImageFont
 from httpx._types import ProxyTypes
+from PIL import ImageDraw, ImageFont
 
 from ..images import *
 from .model import Operator

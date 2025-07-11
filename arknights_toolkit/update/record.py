@@ -1,11 +1,11 @@
 import json
 from pathlib import Path
-from typing import List, Optional
+from typing import Optional
 
 import httpx
-from lxml import etree
 from loguru import logger
 from httpx._types import ProxyTypes
+from selectolax.parser import HTMLParser
 
 
 async def get_prts_pool_info(pinfo: dict, proxy: Optional[ProxyTypes] = None):
@@ -13,21 +13,13 @@ async def get_prts_pool_info(pinfo: dict, proxy: Optional[ProxyTypes] = None):
     prts_url = "https://prts.wiki/w/%E5%8D%A1%E6%B1%A0%E4%B8%80%E8%A7%88/%E9%99%90%E6%97%B6%E5%AF%BB%E8%AE%BF"
     async with httpx.AsyncClient(verify=False, proxy=proxy) as client:
         prts_res = (await client.get(prts_url)).text
-        root = etree.HTML(prts_res, etree.HTMLParser())
-        # 限定
-        group_type_tables: List[etree._Element] = root.xpath(
-            "//table[@class='wikitable mw-collapsible fullline logo']"
-        )
-        group_types = [1, 0]  # is_exclusive
-        for g_type, type_div in zip(group_types, group_type_tables):
-            trs: List[etree._Element] = type_div.getchildren()[0].getchildren()
-            for tr in trs[1:]:
-                if not (td := tr.getchildren()):
-                    continue
-                td0: etree._Element = td[0]
-                if (a_elem := td0.find("a", None)) is not None:
-                    pname = a_elem.get("title").strip().strip("寻访模拟/")
-                    pinfo[pname] = {"is_exclusive": bool(g_type)}
+        root = HTMLParser(prts_res)
+        group_type_tables = root.css("table.wikitable.mw-collapsible.fullline.logo.mw-made-collapsible")
+        group_type = [1, 0]  # is_exclusive
+        for g_type, type_div in zip(group_type, group_type_tables):
+            for a in type_div.css("a[title]"):
+                pname = (a.attributes["title"] or "").strip().strip("寻访模拟/")
+                pinfo[pname] = {"is_exclusive": bool(g_type)}
         return pinfo
 
 

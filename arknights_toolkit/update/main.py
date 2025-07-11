@@ -8,9 +8,9 @@ from typing import Dict, List, Union, Optional
 import httpx
 import ujson as json
 from PIL import Image
-import lxml.etree as etree
 from loguru import logger
 from httpx._types import ProxyTypes
+from selectolax.parser import HTMLParser
 
 __all__ = ["fetch", "fetch_info", "fetch_image", "fetch_profile_image"]
 
@@ -150,8 +150,6 @@ async def fetch_image(name: str, charid: str, client: httpx.AsyncClient, retry: 
             )
             if resp.status_code != 200:
                 raise RuntimeError(f"status code: {resp.status_code}")
-            # root = etree.HTML(resp.text)
-            # sub = root.xpath(f'//img[@alt="文件:半身像 {name} {level}.png"]')[0]
             avatar: Image.Image = Image.open(BytesIO(resp.content)).crop((20, 0, 124 + 20, 360))
             with (operate_path / f"{name}.png").open("wb") as f:
                 avatar.save(f, format="PNG", quality=100, subsampling=2, qtables="web_high")
@@ -193,8 +191,11 @@ async def fetch_profile_image(name: str, charid: str, client: httpx.AsyncClient,
 async def fetch_info(name: str, client: httpx.AsyncClient):
     logger.debug(f"handle info of {name} ...")
     resp = await client.get(f"https://prts.wiki/index.php?title={name}&action=edit", timeout=20.0)
-    root = etree.HTML(resp.text, etree.HTMLParser())
-    sub = root.xpath('//textarea[@id="wpTextbox1"]')[0].text
+    root = HTMLParser(resp.text)
+    sub_node = root.css_first("textarea#wpTextbox1")
+    if not sub_node:
+        raise ValueError(f"Could not find textarea in {name} page")
+    sub = sub_node.text()
     op_id = id_pat.search(sub)[1]  # type: ignore
     char = char_pat.search(sub)[1]  # type: ignore
     sub_char = sub_char_pat.search(sub)[1]  # type: ignore
@@ -299,8 +300,6 @@ async def fetch(
         tables.update({raw["title"]["干员"]: _transform(raw["title"]) for raw in queries})
         for name in tables:
             try:
-                # if name not in tables or cover:
-                #     tables[name] = await fetch_info(name, client)
                 if select & 0b10 and (not (operate_path / f"{name}.png").exists() or cover):
                     await fetch_image(name, tables[name]["id"], client, retry)
                 if select & 0b01 and (not (operate_path / f"profile_{name}.png").exists() or cover):
@@ -308,7 +307,6 @@ async def fetch(
             except (httpx.TimeoutException, httpx.ConnectError) as e:
                 logger.error(f"拉取 {name} 失败: {type(e)}({e})\n请检查网络或代理设置")
                 continue
-
     with info_path.open("w+", encoding="utf-8") as _f:
         json.dump(_infos, _f, ensure_ascii=False, indent=2)
     logger.success("operator resources updated")

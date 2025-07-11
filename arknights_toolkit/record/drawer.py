@@ -1,5 +1,4 @@
 import time
-from math import ceil
 from io import BytesIO
 from pathlib import Path
 from typing import Tuple, Union, Optional
@@ -29,13 +28,7 @@ plt.rcParams["axes.facecolor"] = img_bcolor
 plt.rcParams["savefig.facecolor"] = img_bcolor
 
 # 图片路径
-__all__ = ["debug_plt", "ArkImageDrawer", "ArkImage"]
-
-
-def debug_plt(img):  # 调试时候使用
-    plt.cla()
-    plt.imshow(img)
-    plt.show()
+__all__ = ["ArkImageDrawer", "ArkImage"]
 
 
 def pil_font(font_size: int, font_path: Path):
