@@ -20,6 +20,9 @@ pat6 = re.compile(r"（占.*?的.*?(\d+).*?%）")
 pat7 = re.compile(
     r"(?P<start_m>\d{2})月(?P<start_d>\d{2})日( )?(?P<start_H>\d{2}):(?P<start_M>\d{2}) - (?P<end_m>\d{2})月(?P<end_d>\d{2})日( )?(?P<end_H>\d{2}):(?P<end_M>\d{2})"
 )
+pat7_1 = re.compile(
+    r"(?P<start_m>\d{2})月(?P<start_d>\d{2})日( )?版本更新后 - (?P<end_m>\d{2})月(?P<end_d>\d{2})日( )?(?P<end_H>\d{2}):(?P<end_M>\d{2})"
+)
 pat8 = re.compile(r"\d{4}年\d{1,2}月\d{1,2}日$")
 
 
@@ -39,6 +42,19 @@ def fetch_chars(dom: HTMLParser):
     for index, content in enumerate(contents):
         if match := pat7.search(content):
             times.append(match)
+        elif match1 := pat7_1.search(content):
+            times.append(
+                {
+                    "start_m": match1["start_m"],
+                    "start_d": match1["start_d"],
+                    "start_H": "12",
+                    "start_M": "0",
+                    "end_m": match1["end_m"],
+                    "end_d": match1["end_d"],
+                    "end_H": match1["end_H"],
+                    "end_M": match1["end_M"],
+                }
+            )
         if not base and (match1 := pat8.search(content)):
             base = int(datetime.strptime(match1.group(), "%Y年%m月%d日").timestamp())
         if not pat1.search(content):
