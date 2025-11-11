@@ -140,7 +140,7 @@ if not info_path.exists():
 
 
 async def fetch_image(name: str, charid: str, client: httpx.AsyncClient, retry: int):
-    level = 2 if name == "阿米娅(近卫)" else 1
+    level = 2 if name.startswith("阿米娅(") else 1
     _retry = retry
     while _retry:
         logger.debug(f"handle image of {name} ...")
@@ -170,7 +170,7 @@ async def fetch_profile_image(name: str, charid: str, client: httpx.AsyncClient,
             resp = await client.get(
                 (
                     f"https://torappu.prts.wiki/assets/char_avatar/{charid}_2.png"
-                    if name == "阿米娅(近卫)"
+                    if name.startswith("阿米娅(")
                     else f"https://torappu.prts.wiki/assets/char_avatar/{charid}.png"
                 ),
                 timeout=20.0,
