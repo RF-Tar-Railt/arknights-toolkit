@@ -34,11 +34,11 @@ else:
 
 rarity_table_file = Path(__file__).parent.parent.parent / "resource" / "gacha" / "rarity_table.json"
 
-SPECIAL_NAMES = {"前路回响", "适合多种场合的强力干员"}
+SPECIAL_NAMES = {"前路回响", "归航寻访", "定向甄选", "适合多种场合的强力干员"}
 
 
 async def fetch(proxy: Optional[ProxyTypes] = None):
-    async with AsyncClient(verify=False, proxy=proxy, follow_redirects=True) as client:
+    async with AsyncClient(verify=False, proxy=proxy, follow_redirects=True, timeout=30) as client:
         resp = await client.get(INDEX_URL if proxy else INDEX_URL_PROXIED)
         index_data: GachaTableIndex = ujson.loads(resp.text)
         resp1 = await client.get(DETAILS_URL)
@@ -61,14 +61,17 @@ async def fetch(proxy: Optional[ProxyTypes] = None):
     if detail is None:
         detail = random.choice([d for d in details_data if d["gachaPoolId"].startswith("NORM")])
     # print(detail["gachaPoolDetail"]["detailInfo"])
-    current_limit = detail["gachaPoolDetail"]["detailInfo"]["limitedChar"]
-    weight_limit = detail["gachaPoolDetail"]["detailInfo"]["weightUpCharInfoList"]
+    # current_limit = detail["gachaPoolDetail"]["detailInfo"]["limitedChar"]
+    # weight_limit = detail["gachaPoolDetail"]["detailInfo"]["weightUpCharInfoList"]
+
     for chars in detail["gachaPoolDetail"]["detailInfo"]["availCharInfo"]["perAvailList"]:
-        for char in chars["charIdList"]:
-            if current_limit and char in current_limit:
-                continue
-            if weight_limit and char in [char["charId"] for char in weight_limit]:
-                continue
+        try:
+            index_cqbw = chars["charIdList"].index("char_113_cqbw")
+        except ValueError:
+            index_cqbw = -1
+        for i, char in enumerate(chars["charIdList"]):
+            if 0 < index_cqbw <= i:
+                break
             try:
                 table[mapping[char]] = chars["rarityRank"] + 1
             except KeyError:

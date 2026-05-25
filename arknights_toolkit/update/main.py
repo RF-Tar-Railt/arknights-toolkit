@@ -296,7 +296,7 @@ async def fetch(
         _infos = json.load(_f)
     tables = _infos.setdefault("table", {})
     async with httpx.AsyncClient(verify=False, proxy=proxy, timeout=60) as client:
-        queries: List[Dict[str, Chara]] = (await client.get(cargo_query)).json()["cargoquery"]
+        queries: List[Dict[str, Chara]] = (await client.get(cargo_query, timeout=30)).json()["cargoquery"]
         tables.update({raw["title"]["干员"]: _transform(raw["title"]) for raw in queries})
         for name in tables:
             try:

@@ -67,7 +67,7 @@ def fetch_chars(dom: HTMLParser):
                 """因为 <p> 的诡异排版，所以有了下面的一段"""
                 if "★★" in line and "%" in line:
                     chars.append(line)
-                elif "★★" in line and "%" in lines[idx + 1]:
+                elif "★★" in line and len(lines) > idx + 1 and "%" in lines[idx + 1]:
                     chars.append(line + lines[idx + 1])
                 if line.startswith("https://"):
                     break
@@ -123,7 +123,7 @@ def fetch_chars(dom: HTMLParser):
 
 async def get_info(proxy: Optional[ProxyTypes] = None):
     async with AsyncClient(verify=False, proxy=proxy) as client:
-        result = (await client.get("https://ak.hypergryph.com/news")).text
+        result = (await client.get("https://ak.hypergryph.com/news", timeout=30)).text
         if not result:
             logger.warning("明日方舟 获取公告出错")
             raise TimeoutException("未找到明日方舟公告")
@@ -140,7 +140,7 @@ async def get_info(proxy: Optional[ProxyTypes] = None):
         for article in index:
             if pat.match(article["title"]):
                 activity_url = f"https://ak.hypergryph.com/news/{article['cid']}"
-                result = (await client.get(activity_url)).text
+                result = (await client.get(activity_url, timeout=30)).text
                 if not result:
                     logger.warning(f"明日方舟 获取公告 {activity_url} 出错")
                     continue

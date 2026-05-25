@@ -14,7 +14,7 @@ def make(table: dict, pool: dict):
     """生成卡池信息"""
     for name, rarity in table.items():
         if rarity == 6:
-            if name in pool["up_six_list"]:
+            if name in pool["up_six_list"] or name in pool["up_limit"] or name in pool["up_alert_limit"]:
                 continue
             pool["operators"]["六"].append(name)
         elif rarity == 5:
@@ -85,7 +85,7 @@ async def generate(file: Path, proxy: Optional[ProxyTypes] = None):
         pool["four_per"] = char.chance
     try:
         table = await fetch(proxy)
-    except (TimeoutException, ConnectError):
+    except (TimeoutException, ConnectError) as e:
         tablefile = Path(__file__).parent.parent / "resource" / "gacha" / "rarity_table.json"
         if tablefile.exists():
             with tablefile.open("r", encoding="utf-8") as f:
