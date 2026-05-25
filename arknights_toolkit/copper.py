@@ -1,9 +1,10 @@
-from PIL import Image, ImageDraw, ImageFilter, ImageFont
-from pathlib import Path
 import json
-import datetime
 import random
-from typing import List, Dict, Tuple, Any, Optional
+import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Tuple, Optional
+
+from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
 # --- 资源路径和数据加载 ---
 dir_ = Path(__file__).parent / "resource"
@@ -35,21 +36,34 @@ def _preload_images() -> Dict[str, Any]:
 
     # 通用和详情页资源
     for key in [
-        "detail_selecting_frame", "copper_dec_cloud_up", "copper_dec_cloud_down",
-        "copper_draw_state_back_color", "copper_draw_state_back_mask",
-        "back_tree_left", "btn_check", "result_copper_detail_back",
-        "crossline_vertical"
+        "detail_selecting_frame",
+        "copper_dec_cloud_up",
+        "copper_dec_cloud_down",
+        "copper_draw_state_back_color",
+        "copper_draw_state_back_mask",
+        "back_tree_left",
+        "btn_check",
+        "result_copper_detail_back",
+        "crossline_vertical",
     ]:
         assets[key] = Image.open(f"{resource_path}/{key}.png").convert("RGBA")
 
     # 按类型/模式分类的资源
     for mode in ["normal", "bad", "nice"]:
-        assets[f"bg_{mode}_mountain_right"] = Image.open(f"{resource_path}/bg_{mode}_mountain_right.png").convert("RGBA")
-        assets[f"result_{mode}_copper_back"] = Image.open(f"{resource_path}/result_{mode}_copper_back.png").convert("RGBA")
+        assets[f"bg_{mode}_mountain_right"] = Image.open(
+            f"{resource_path}/bg_{mode}_mountain_right.png"
+        ).convert("RGBA")
+        assets[f"result_{mode}_copper_back"] = Image.open(
+            f"{resource_path}/result_{mode}_copper_back.png"
+        ).convert("RGBA")
 
     for type_ in ["high", "mid", "low"]:
-        assets[f"copper_frame_{type_}"] = Image.open(f"{resource_path}/copper_frame_{type_}.png").convert("RGBA")
-        assets[f"icon_copper_type_{type_}"] = Image.open(f"{resource_path}/icon_copper_type_{type_}.png").convert("RGBA")
+        assets[f"copper_frame_{type_}"] = Image.open(f"{resource_path}/copper_frame_{type_}.png").convert(
+            "RGBA"
+        )
+        assets[f"icon_copper_type_{type_}"] = Image.open(
+            f"{resource_path}/icon_copper_type_{type_}.png"
+        ).convert("RGBA")
 
     # --- 预处理需要变换的图像 ---
     # front_tree_right_blur
@@ -66,7 +80,9 @@ def _preload_images() -> Dict[str, Any]:
     tree_l_blur = Image.open(f"{resource_path}/front_tree_left_blur.png").convert("RGBA")
     blurred_l = tree_l_blur.filter(ImageFilter.GaussianBlur(radius=3))
     scaled_l = blurred_l.resize((blurred_l.width * 4, blurred_l.height * 2), Image.Resampling.LANCZOS)
-    assets["processed_tree_l_blur"] = scaled_l.crop((scaled_l.width // 2, 0, scaled_l.width, scaled_l.height // 2))
+    assets["processed_tree_l_blur"] = scaled_l.crop(
+        (scaled_l.width // 2, 0, scaled_l.width, scaled_l.height // 2)
+    )
 
     # crossline_vertical
     crossline = assets["crossline_vertical"]
@@ -78,22 +94,24 @@ def _preload_images() -> Dict[str, Any]:
 ASSETS = _preload_images()
 
 
-def create_gradient_image(width: int, height: int, color_points: List[Tuple[Tuple[int, int, int], float]], direction: int = 1) -> Image.Image:
+def create_gradient_image(
+    width: int, height: int, color_points: List[Tuple[Tuple[int, int, int], float]], direction: int = 1
+) -> Image.Image:
     """创建渐变图像 (性能优化版)
     direction: 0=水平, 1=垂直
     """
     if direction == 0:  # 水平
-        gradient = Image.new('RGB', (width, 1))
+        gradient = Image.new("RGB", (width, 1))
         draw = ImageDraw.Draw(gradient)
         points = sorted([(int(pos * (width - 1)), color) for color, pos in color_points])
     else:  # 垂直
-        gradient = Image.new('RGB', (1, height))
+        gradient = Image.new("RGB", (1, height))
         draw = ImageDraw.Draw(gradient)
         points = sorted([(int(pos * (height - 1)), color) for color, pos in color_points])
 
     for i in range(len(points) - 1):
         start_pos, start_color = points[i]
-        end_pos, end_color = points[i+1]
+        end_pos, end_color = points[i + 1]
 
         if start_pos >= end_pos:
             continue
@@ -123,7 +141,9 @@ def create_gradient_image(width: int, height: int, color_points: List[Tuple[Tupl
         return gradient.resize((width, height), Image.Resampling.NEAREST)
 
 
-def get_random_coppers(copper_data_map: Dict[str, Dict[str, Any]], session: Optional[str]) -> List[Dict[str, Any]]:
+def get_random_coppers(
+    copper_data_map: Dict[str, Dict[str, Any]], session: Optional[str]
+) -> List[Dict[str, Any]]:
     """随机选择指定数量的铜币"""
     if not copper_data_map:
         return []
@@ -142,16 +162,16 @@ def get_random_coppers(copper_data_map: Dict[str, Dict[str, Any]], session: Opti
 def determine_mode_from_coppers(coppers: List[Dict[str, Any]]) -> str:
     """根据铜币类型确定图片模式"""
     if not coppers:
-        return 'normal'
+        return "normal"
 
-    types = [copper.get('type', 'mid') for copper in coppers]
+    types = [copper.get("type", "mid") for copper in coppers]
 
-    if all(t == 'high' for t in types):
-        return 'nice'
-    elif all(t == 'low' for t in types):
-        return 'bad'
+    if all(t == "high" for t in types):
+        return "nice"
+    elif all(t == "low" for t in types):
+        return "bad"
     else:
-        return 'normal'
+        return "normal"
 
 
 def wrap_text(text: str, font: ImageFont.FreeTypeFont, max_width: int) -> List[str]:
@@ -181,7 +201,13 @@ def wrap_text(text: str, font: ImageFont.FreeTypeFont, max_width: int) -> List[s
     return lines
 
 
-def draw_copper_detail(background: Image.Image, copper_info: Dict[str, Any], copper_detail_back: Image.Image, x_pos: int, y_pos: int) -> None:
+def draw_copper_detail(
+    background: Image.Image,
+    copper_info: Dict[str, Any],
+    copper_detail_back: Image.Image,
+    x_pos: int,
+    y_pos: int,
+) -> None:
     """在指定位置绘制单个铜币的详细信息"""
     title_font = ASSETS["fonts"]["title"]
     desc_font = ASSETS["fonts"]["desc"]
@@ -273,9 +299,27 @@ def draw_copper_detail(background: Image.Image, copper_info: Dict[str, Any], cop
 def create_composite_image(mode: str, coppers: List[Dict[str, Any]]) -> Image.Image:
     """创建复合图像"""
     gradients = {
-        'normal': [((67, 162, 140), 0.0), ((175, 228, 219), 0.25), ((215, 254, 251), 0.5), ((169, 224, 214), 0.75), ((67, 162, 140), 1.0)],
-        'bad': [((8, 34, 25), 0.0), ((142, 62, 73), 0.25), ((193, 67, 93), 0.5), ((139, 65, 78), 0.75), ((8, 39, 40), 1.0)],
-        'nice': [((248, 182, 200), 0.0), ((228, 232, 240), 0.25), ((216, 249, 255), 0.5), ((227, 232, 241), 0.75), ((248, 182, 200), 1.0)]
+        "normal": [
+            ((67, 162, 140), 0.0),
+            ((175, 228, 219), 0.25),
+            ((215, 254, 251), 0.5),
+            ((169, 224, 214), 0.75),
+            ((67, 162, 140), 1.0),
+        ],
+        "bad": [
+            ((8, 34, 25), 0.0),
+            ((142, 62, 73), 0.25),
+            ((193, 67, 93), 0.5),
+            ((139, 65, 78), 0.75),
+            ((8, 39, 40), 1.0),
+        ],
+        "nice": [
+            ((248, 182, 200), 0.0),
+            ((228, 232, 240), 0.25),
+            ((216, 249, 255), 0.5),
+            ((227, 232, 241), 0.75),
+            ((248, 182, 200), 1.0),
+        ],
     }
     background = create_gradient_image(1440, 720, gradients[mode], direction=1)
 
@@ -304,8 +348,8 @@ def create_composite_image(mode: str, coppers: List[Dict[str, Any]]) -> Image.Im
     center_y = 720 // 3 + 60
     coin_positions = [
         (center_x - 100, center_y - 65),  # coppers[0]
-        (center_x - 30, center_y - 45),   # coppers[1]
-        (center_x - 50, center_y - 130)   # coppers[2]
+        (center_x - 30, center_y - 45),  # coppers[1]
+        (center_x - 50, center_y - 130),  # coppers[2]
     ]
     # 调整绘制顺序以确保正确的堆叠
     draw_order = [0, 1, 2]
@@ -338,7 +382,7 @@ def create_composite_image(mode: str, coppers: List[Dict[str, Any]]) -> Image.Im
     start_x = (left_width - total_width) // 2
 
     for i in range(3):
-        x_pos = start_x + i * (copper_detail_back.width + 10) # 加上间距
+        x_pos = start_x + i * (copper_detail_back.width + 10)  # 加上间距
         y_pos = (720 - copper_detail_back.height) // 2
         background.paste(copper_detail_back, (x_pos, y_pos), copper_detail_back)
         draw_copper_detail(background, coppers[i], copper_detail_back, x_pos, y_pos)
