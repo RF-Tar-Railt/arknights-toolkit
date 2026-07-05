@@ -6,7 +6,7 @@ from .plugins.update import Update
 
 arkkit = CommandLine(
     "Command Line Interface for Arknights Toolkit",
-    "0.7.8",
+    "0.8.1",
     rich=True,
     _name="arkkit",
     load_preset=True,

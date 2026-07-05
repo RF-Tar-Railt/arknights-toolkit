@@ -5,6 +5,7 @@ from pathlib import Path
 
 from clilte import BasePlugin, PluginMetadata
 from arclet.alconna import Args, Option, Alconna, Arparma, CommandMeta
+from clilte.core import Next
 
 from arknights_toolkit.update.record import generate as generate_record
 
@@ -23,7 +24,7 @@ class Update(BasePlugin):
     def meta(self) -> PluginMetadata:
         return PluginMetadata("update", "0.1.0", "update", ["update"], ["RF-Tar-Railt"], 20)
 
-    def dispatch(self, result: Arparma) -> bool | None:
+    def dispatch(self, result: Arparma, next_: Next):
         if result.find("update"):
             from arknights_toolkit.update.gacha import generate as generate_gacha
 
@@ -43,8 +44,8 @@ class Update(BasePlugin):
                     )
                 ).absolute()
                 asyncio.run(generate_record(path, proxy))
-            return False
-        return True
+            return
+        return next_(None)
 
     @classmethod
     def supply_options(cls):

@@ -6,6 +6,7 @@ from pathlib import Path
 from loguru import logger
 from nepattern import SwitchPattern
 from clilte import BasePlugin, PluginMetadata
+from clilte.core import Next
 from arclet.alconna import Args, Option, Alconna, Arparma, CommandMeta, append
 
 
@@ -28,7 +29,7 @@ class Clear(BasePlugin):
     def meta(self) -> PluginMetadata:
         return PluginMetadata("clear", "0.1.0", "clear", ["clear"], ["RF-Tar-Railt"], 10)
 
-    def dispatch(self, result: Arparma) -> bool | None:
+    def dispatch(self, result: Arparma, next_: Next):
         if result.find("clear"):
             select = sum(set(result.query("init.select.flag", [1, 2])))
             base_path = Path(__file__).parent.parent.parent / "resource"
@@ -44,8 +45,8 @@ class Clear(BasePlugin):
                     logger.info(f"{img.name} has been removed")
             (base_path / "ops_initialized").unlink(missing_ok=True)
             logger.success("resource has been cleared")
-            return False
-        return True
+            return
+        return next_(None)
 
     @classmethod
     def supply_options(cls) -> list[Option] | None:

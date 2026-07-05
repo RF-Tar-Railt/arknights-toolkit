@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 from pathlib import Path
 
+from clilte.core import Next
 from nepattern import SwitchPattern
 from clilte import BasePlugin, PluginMetadata
 from arclet.alconna import Args, Option, Alconna, Arparma, CommandMeta, append, store_true
@@ -33,7 +34,7 @@ class Init(BasePlugin):
     def meta(self) -> PluginMetadata:
         return PluginMetadata("init", "0.1.0", "init", ["init"], ["RF-Tar-Railt"], 10)
 
-    def dispatch(self, result: Arparma) -> bool | None:
+    def dispatch(self, result: Arparma, next_: Next):
         if result.find("init"):
             from arknights_toolkit.update.main import fetch
 
@@ -50,8 +51,8 @@ class Init(BasePlugin):
             base_path = Path(__file__).parent.parent.parent / "resource"
             with (base_path / "ops_initialized").open("w+", encoding="utf-8") as _f:
                 _f.write(__version__)
-            return False
-        return True
+            return
+        return next_(None)
 
     @classmethod
     def supply_options(cls):
