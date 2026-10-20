@@ -5,7 +5,7 @@ from typing import List, Optional
 import ujson
 from loguru import logger
 from httpx._types import ProxyTypes
-from selectolax.parser import HTMLParser
+from selectolax.lexbor import LexborHTMLParser
 from httpx import AsyncClient, TimeoutException
 
 from .model import UpdateChar, UpdateInfo
@@ -26,7 +26,7 @@ pat7_1 = re.compile(
 pat8 = re.compile(r"\d{4}年\d{1,2}月\d{1,2}日$")
 
 
-def fetch_chars(dom: HTMLParser):
+def fetch_chars(dom: LexborHTMLParser):
     contents: list = [node.text(strip=True) for node in dom.css("p")]
     contents.extend([node.text(strip=True) for node in dom.css("p > *")])
     contents.extend(
@@ -127,7 +127,7 @@ async def get_info(proxy: Optional[ProxyTypes] = None):
         if not result:
             logger.warning("明日方舟 获取公告出错")
             raise TimeoutException("未找到明日方舟公告")
-        dom = HTMLParser(result.replace("><", ">\n<"))
+        dom = LexborHTMLParser(result.replace("><", ">\n<"))
         scripts = dom.css("script")
         codes = [elem.text().replace('\\"', '"') for elem in scripts if elem.text(strip=True).startswith("self.__next_f.push(")]
         code = next((code for code in codes if "initialData" in code), None)
@@ -146,7 +146,7 @@ async def get_info(proxy: Optional[ProxyTypes] = None):
                     continue
 
                 """因为鹰角的前端太自由了，这里重写了匹配规则以尽可能避免因为前端乱七八糟而导致的重载失败"""
-                dom = HTMLParser(result)
+                dom = LexborHTMLParser(result)
                 title, start, end, pool_img, up_chars = fetch_chars(dom)
                 if not title or title.startswith("跨年欢庆"):
                     continue

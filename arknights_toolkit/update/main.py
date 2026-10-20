@@ -10,7 +10,7 @@ import ujson as json
 from PIL import Image
 from loguru import logger
 from httpx._types import ProxyTypes
-from selectolax.parser import HTMLParser
+from selectolax.lexbor import LexborHTMLParser
 
 __all__ = ["fetch", "fetch_info", "fetch_image", "fetch_profile_image"]
 
@@ -191,7 +191,7 @@ async def fetch_profile_image(name: str, charid: str, client: httpx.AsyncClient,
 async def fetch_info(name: str, client: httpx.AsyncClient):
     logger.debug(f"handle info of {name} ...")
     resp = await client.get(f"https://prts.wiki/index.php?title={name}&action=edit", timeout=20.0)
-    root = HTMLParser(resp.text)
+    root = LexborHTMLParser(resp.text)
     sub_node = root.css_first("textarea#wpTextbox1")
     if not sub_node:
         raise ValueError(f"Could not find textarea in {name} page")
