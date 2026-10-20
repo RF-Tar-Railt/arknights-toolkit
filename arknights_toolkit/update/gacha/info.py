@@ -129,11 +129,11 @@ async def get_info(proxy: Optional[ProxyTypes] = None):
             raise TimeoutException("未找到明日方舟公告")
         dom = HTMLParser(result.replace("><", ">\n<"))
         scripts = dom.css("script")
-        code = (
-            [elem for elem in scripts if elem.text(strip=True).startswith("self.__next_f.push(")][-1]
-            .text()
-            .replace('\\"', '"')
-        )
+        codes = [elem.text().replace('\\"', '"') for elem in scripts if elem.text(strip=True).startswith("self.__next_f.push(")]
+        code = next((code for code in codes if "initialData" in code), None)
+        if not code:
+            logger.warning("明日方舟 获取公告出错")
+            raise ValueError("未找到明日方舟公告")
         init_char_index = code[:100].find("initialData") - 2
         index = ujson.loads(code[init_char_index : -len(']\n"])') - 1])["initialData"]["ACTIVITY"]["list"]
         infos = []

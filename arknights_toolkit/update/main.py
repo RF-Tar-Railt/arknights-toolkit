@@ -295,9 +295,12 @@ async def fetch(
     with info_path.open("r+", encoding="utf-8") as _f:
         _infos = json.load(_f)
     tables = _infos.setdefault("table", {})
-    async with httpx.AsyncClient(verify=False, proxy=proxy, timeout=60) as client:
-        queries: List[Dict[str, Chara]] = (await client.get(cargo_query, timeout=30)).json()["cargoquery"]
+    async with httpx.AsyncClient(proxy=proxy, timeout=60) as client:
+        queries: List[Dict[str, Chara]] = (await client.get(cargo_query, timeout=60)).json()["cargoquery"]
         tables.update({raw["title"]["干员"]: _transform(raw["title"]) for raw in queries})
+        org_related = _infos.setdefault("org_related", {})
+        for operator in tables.values():
+            org_related.setdefault(operator["org"], [])
         for name in tables:
             try:
                 if select & 0b10 and (not (operate_path / f"{name}.png").exists() or cover):

@@ -141,7 +141,7 @@ class OperatorWordle:
         if guess_op["org"] != selected["org"]:
             if selected_name in guess_op.get("relate", []) or name in selected.get("relate", []):
                 res["org"] = "relate"
-            elif guess_op["org"] in self.relations[selected["org"]]:
+            elif guess_op["org"] in self.relations.get(selected["org"], []):
                 res["org"] = "relate"
             else:
                 res["org"] = "wrong"
