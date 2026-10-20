@@ -15,7 +15,7 @@ dependencies = [
     "ujson>=5.9.0",
     "selectolax>=0.3.31",
 ]
-requires-python = ">=3.9"
+requires-python = "<3.16,>=3.9"
 readme = "README.md"
 license = {text = "AGPL-3.0"}
 dynamic = ["version"]
@@ -32,12 +32,6 @@ build-backend = "pdm.backend"
 
 [tool]
 [tool.pdm]
-[tool.pdm.dev-dependencies]
-dev = [
-    "black>=24.2.0",
-    "isort>=5.13.2",
-]
-
 [tool.pdm.build]
 includes = ["arknights_toolkit"]
 excludes = [
@@ -69,3 +63,10 @@ extra_standard_library = ["typing_extensions"]
 pythonVersion = "3.9"
 pythonPlatform = "All"
 typeCheckingMode = "basic"
+
+[dependency-groups]
+dev = [
+    "black>=24.2.0",
+    "isort>=5.13.2",
+    "selectolax>=1",
+]
