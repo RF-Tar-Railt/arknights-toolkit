@@ -1,4 +1,3 @@
-import re
 from io import BytesIO
 from enum import IntEnum
 from pathlib import Path
@@ -10,19 +9,9 @@ import ujson as json
 from PIL import Image
 from loguru import logger
 from httpx._types import ProxyTypes
-from selectolax.lexbor import LexborHTMLParser
 
 __all__ = ["fetch", "fetch_info", "fetch_image", "fetch_profile_image"]
 
-id_pat = re.compile(r"\|干员id=char_([^|]+?)\n\|")
-rarity_pat = re.compile(r"\|稀有度=(\d+?)\n\|")
-char_pat = re.compile(r"\|职业=([^|]+?)\n\|")
-sub_char_pat = re.compile(r"\|分支=([^|]+?)\n\|")
-race_pat = re.compile(r"\|种族=([^|]+?)\n\|")
-org_pat = re.compile(r"\|所属国家=([^|]+?)\n\|")
-org_pat1 = re.compile(r"\|所属组织=([^|]+?)\n\|")
-org_pat2 = re.compile(r"\|所属团队=([^|]+?)\n\|")
-art_pat = re.compile(r"\|画师=([^|]+?)\n\|")
 
 base_path = Path(__file__).parent.parent / "resource"
 operate_path = base_path / "operators"
@@ -188,50 +177,6 @@ async def fetch_profile_image(name: str, charid: str, client: httpx.AsyncClient,
         logger.error(f"failed to get profile image of {name} after {retry} retries")
 
 
-async def fetch_info(name: str, client: httpx.AsyncClient):
-    logger.debug(f"handle info of {name} ...")
-    resp = await client.get(f"https://prts.wiki/index.php?title={name}&action=edit", timeout=20.0)
-    root = LexborHTMLParser(resp.text)
-    sub_node = root.css_first("textarea#wpTextbox1")
-    if not sub_node:
-        raise ValueError(f"Could not find textarea in {name} page")
-    sub = sub_node.text()
-    op_id = id_pat.search(sub)[1]  # type: ignore
-    char = char_pat.search(sub)[1]  # type: ignore
-    sub_char = sub_char_pat.search(sub)[1]  # type: ignore
-    rarity = rarity_pat.search(sub)[1]  # type: ignore
-    try:
-        race = race_pat.search(sub)[1]  # type: ignore
-    except TypeError:
-        race = "/"
-    try:
-        org1 = org_pat.search(sub)[1]  # type: ignore
-    except TypeError:
-        org1 = ""
-    try:
-        org2 = org_pat1.search(sub)[1]  # type: ignore
-    except TypeError:
-        org2 = ""
-    try:
-        org3 = org_pat2.search(sub)[1]  # type: ignore
-    except TypeError:
-        org3 = ""
-    org = org3 or org2 or org1
-    org = org or "/"
-    if org == "深池":
-        org = "塔拉"
-    art = art_pat.search(sub)[1]  # type: ignore
-    logger.success(f"{name}({char}) info fetched")
-    return {
-        "id": f"char_{op_id}",
-        "rarity": int(rarity),
-        "org": org,
-        "career": f"{char}-{sub_char}",
-        "race": race,
-        "artist": art,
-    }
-
-
 class FetchFlag(IntEnum):
     IMG = 2
     REC = 1
@@ -314,3 +259,12 @@ async def fetch(
         json.dump(_infos, _f, ensure_ascii=False, indent=2)
     logger.success("operator resources updated")
     return True
+
+
+cargo_query_one = "https://prts.wiki/api.php?action=cargoquery&format=json&limit=500&tables=chara%2Cchara_data%2Cchara_extra_info%2Cchar_obtain&fields=chara.charId%3Dcharid%2C%20chara._pageName%3D%E5%B9%B2%E5%91%98%2C%20chara.charIndex%3D%E5%B9%B2%E5%91%98%E5%BA%8F%E5%8F%B7%2C%20chara.rarity%3D%E7%A8%80%E6%9C%89%E5%BA%A6%2C%20chara.nation%3D%E5%9B%BD%E5%AE%B6%2C%20chara.org%3D%E7%BB%84%E7%BB%87%2C%20chara.team%3D%E5%9B%A2%E9%98%9F%2C%20chara.profession%3D%E8%81%8C%E4%B8%9A%2C%20chara.subProfession%3D%E5%AD%90%E8%81%8C%E4%B8%9A%2C%20chara_extra_info.race%3D%E7%A7%8D%E6%97%8F%2C%20chara.painter%3D%E7%94%BB%E5%B8%88%2C&where=chara.charIndex%3E0%20AND%20chara._pageName='{}'&join_on=chara._pageName%3Dchara_data._pageName%2Cchara._pageName%3Dchara_extra_info._pageName%2Cchara._pageName%3Dchar_obtain._pageName&utf8=1"
+
+
+async def fetch_info(name: str, client: httpx.AsyncClient):
+    logger.debug(f"handle info of {name} ...")
+    resp = (await client.get(cargo_query_one.format(name), timeout=60)).json()["cargoquery"][0]["title"]
+    return _transform(resp)

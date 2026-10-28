@@ -1,3 +1,5 @@
+from collections.abc import Iterator, MutableMapping
+from functools import lru_cache
 from typing import Dict
 from pathlib import Path
 
@@ -78,13 +80,54 @@ if need_init():
     logger.error("please execute `arkkit init` in your command line")
     signal.raise_signal(signal.SIGINT)
 
-operators: Dict[str, Image.Image] = {
-    path.stem: Image.open(path) for path in (resource_path / "operators").iterdir()
-}
-logger.debug("operators image loaded.")
+
+@lru_cache(maxsize=16)
+def _load_image(path: str) -> Image.Image:
+    with Image.open(path) as image:
+        return image.copy()
+
+
+class LazyImageMap(MutableMapping[str, Image.Image]):
+    """Keep image paths indexed and load each image only when it is requested."""
+
+    def __init__(self, directory: Path):
+        self.directory = directory
+        self._paths: Dict[str, Path] = {}
+        self._images: Dict[str, Image.Image] = {}
+        self.update_paths()
+
+    def update_paths(self) -> None:
+        self._paths.update(
+            {path.stem: path for path in self.directory.iterdir() if path.is_file()}
+        )
+
+    def __getitem__(self, key: str) -> Image.Image:
+        if key in self._images:
+            return self._images[key]
+        if key not in self._paths:
+            raise KeyError(key)
+        return _load_image(str(self._paths[key]))
+
+    def __setitem__(self, key: str, value: Image.Image) -> None:
+        self._images[key] = value
+
+    def __delitem__(self, key: str) -> None:
+        del self._images[key]
+        self._paths.pop(key, None)
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(dict.fromkeys((*self._paths, *self._images)))
+
+    def __len__(self) -> int:
+        return len(set(self._paths) | set(self._images))
+
+    def __contains__(self, key: object) -> bool:
+        return key in self._paths or key in self._images
+
+
+operators = LazyImageMap(resource_path / "operators")
+logger.debug("operators image paths indexed; images will load on demand.")
 
 
 def update_operators():
-    for path in (resource_path / "operators").iterdir():
-        if path.stem not in operators:
-            operators[path.stem] = Image.open(path)
+    operators.update_paths()

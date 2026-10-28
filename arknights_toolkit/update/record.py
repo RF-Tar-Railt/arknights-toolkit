@@ -5,7 +5,7 @@ from typing import Optional
 import httpx
 from loguru import logger
 from httpx._types import ProxyTypes
-from selectolax.parser import HTMLParser
+from selectolax.lexbor import LexborHTMLParser
 
 
 async def get_prts_pool_info(pinfo: dict, proxy: Optional[ProxyTypes] = None):
@@ -13,7 +13,7 @@ async def get_prts_pool_info(pinfo: dict, proxy: Optional[ProxyTypes] = None):
     prts_url = "https://prts.wiki/w/%E5%8D%A1%E6%B1%A0%E4%B8%80%E8%A7%88/%E9%99%90%E6%97%B6%E5%AF%BB%E8%AE%BF"
     async with httpx.AsyncClient(verify=False, proxy=proxy) as client:
         prts_res = (await client.get(prts_url)).text
-        root = HTMLParser(prts_res)
+        root = LexborHTMLParser(prts_res)
         group_type_tables = root.css("table.wikitable.mw-collapsible.fullline.logo.mw-made-collapsible")
         group_type = [1, 0]  # is_exclusive
         for g_type, type_div in zip(group_type, group_type_tables):
