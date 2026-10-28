@@ -6,10 +6,10 @@ from dataclasses import dataclass
 from typing import Dict, List, Union, Literal, Optional, TypedDict, overload
 
 from httpx._types import ProxyTypes
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw
 
 from .update.main import fetch
-from .images import sign, resource_path
+from .images import load_font, resource_path, sign
 
 __all__ = ["Operator", "Guess", "GuessUnit", "OperatorWordle"]
 
@@ -17,9 +17,8 @@ simple_sign = {"correct": "🟩", "down": "⬇", "up": "⬆", "wrong": "🟥", "
 
 state = Literal["correct", "down", "up", "wrong", "relate"]
 
-font_base = ImageFont.truetype(
-    str((Path(__file__).parent / "resource" / "HarmonyOS_Sans_SC_Medium.ttf").absolute()),
-    20,
+font_base = load_font(
+    str((Path(__file__).parent / "resource" / "HarmonyOS_Sans_SC_Medium.ttf").absolute()), 24
 )
 
 
@@ -191,7 +190,7 @@ class OperatorWordle:
                 ans += "\n"
             return ans
 
-        back_img = Image.new("RGB", (600, 80 * (len(res.lines) + 2)), (0, 0, 0))
+        back_img = Image.new("RGB", (620, 80 * (len(res.lines) + 2)), (0, 0, 0))
         draw = ImageDraw.Draw(back_img)
         draw.text((20, 45), "稀有度", fill="white", font=font_base)
         draw.text((130, 45), "阵营", fill="white", font=font_base)
@@ -203,31 +202,31 @@ class OperatorWordle:
             slot = sign[unit["rarity"]].copy()
             size = slot.size
             slot.thumbnail(size)
-            back_img.paste(slot, (10, 80 * (index + 1)), slot)
+            back_img.paste(slot, (15, 80 * (index + 1)), slot)
             slot = sign[unit["org"]].copy()
             size = slot.size
             slot.thumbnail(size)
-            back_img.paste(slot, (110, 80 * (index + 1)), slot)
+            back_img.paste(slot, (115, 80 * (index + 1)), slot)
             slot = sign[unit["career"]].copy()
             size = slot.size
             slot.thumbnail(size)
-            back_img.paste(slot, (210, 80 * (index + 1)), slot)
+            back_img.paste(slot, (215, 80 * (index + 1)), slot)
             slot = sign[unit["race"]].copy()
             size = slot.size
             slot.thumbnail(size)
-            back_img.paste(slot, (310, 80 * (index + 1)), slot)
+            back_img.paste(slot, (315, 80 * (index + 1)), slot)
             slot = sign[unit["artist"]].copy()
             size = slot.size
             slot.thumbnail(size)
-            back_img.paste(slot, (410, 80 * (index + 1)), slot)
+            back_img.paste(slot, (415, 80 * (index + 1)), slot)
             length = len(unit["name"])
-            length = max(length, 4)
+            length = min(max(length, 4), 6)
             font_size = int(4 * font_base.size / length)
             font = font_base.font_variant(size=font_size)
-            width_offset = (100 - font.getbbox(unit["name"])[2]) // 2
+            width_offset = (80 - font.getbbox(unit["name"])[2]) // 2
             height_offset = (80 - font.getbbox(unit["name"])[3]) // 2
             draw.text(
-                (500 + width_offset, 80 * (index + 1) + height_offset),
+                (515 + width_offset, 80 * (index + 1) + height_offset),
                 unit["name"],
                 fill="pink",
                 font=font,

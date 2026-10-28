@@ -1,4 +1,5 @@
 import time
+from functools import lru_cache
 from io import BytesIO
 from pathlib import Path
 from typing import Tuple, Union, Optional
@@ -31,6 +32,7 @@ plt.rcParams["savefig.facecolor"] = img_bcolor
 __all__ = ["ArkImageDrawer", "ArkImage"]
 
 
+@lru_cache(maxsize=8)
 def pil_font(font_size: int, font_path: Path):
     return ImageFont.truetype(str(font_path.absolute()), font_size, encoding="utf-8")
 

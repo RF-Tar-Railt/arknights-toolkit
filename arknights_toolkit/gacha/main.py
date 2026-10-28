@@ -8,15 +8,15 @@ from pathlib import Path
 from typing import Dict, List, Tuple, Union, Optional
 
 from httpx._types import ProxyTypes
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw
 
 from ..util import random_pick_big
 from ..update.gacha import generate
+from ..images import load_font
 from .model import Operator, GachaData, GachaUser
 
-font_base = ImageFont.truetype(
-    str((Path(__file__).parent.parent / "resource" / "HarmonyOS_Sans_SC_Medium.ttf").absolute()),
-    16,
+font_base = load_font(
+    str((Path(__file__).parent.parent / "resource" / "HarmonyOS_Sans_SC_Medium.ttf").absolute()), 18
 )
 
 
@@ -150,11 +150,11 @@ class ArknightsGacha:
         :param relief: 是否需要浮雕效果
         :return: 生成的图片bytes
         """
-        tile = 20
-        width_base = 720
+        tile = 24
+        width_base = 860
         color_base = 0x40
         color_bases = (color_base, color_base, color_base)
-        height = tile * int(math.ceil(count / 10) + 1) + 130
+        height = tile * int(math.ceil(count / 10) + 1) + 150
         img = Image.new("RGB", (width_base, height), color_bases)
         # 绘画对象
         draw = ImageDraw.Draw(img)
@@ -214,7 +214,7 @@ class ArknightsGacha:
             for operator in ots:
                 width = tile * 3
                 length = len(operator.name)
-                length = max(length, 3)
+                length = min(max(length, 3), 5)
                 font_size = int(3 * font_base.size / length)
                 font = font_base.font_variant(size=font_size)
                 l, t, lw, th = font.getbbox(operator.name)

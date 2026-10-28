@@ -4,7 +4,7 @@ from typing import Dict
 from pathlib import Path
 
 from loguru import logger
-from PIL import Image, ImageEnhance
+from PIL import Image, ImageEnhance, ImageFont
 
 from . import need_init
 
@@ -12,6 +12,19 @@ resource_path = Path(__file__).parent / "resource"
 gacha_path = resource_path / "gacha"
 wordle_path = resource_path / "wordle"
 record_path = resource_path / "record"
+
+
+@lru_cache(maxsize=8)
+def _load_font(font_path: str, size: int) -> ImageFont.FreeTypeFont:
+    try:
+        return ImageFont.truetype(font_path, size)
+    except OSError:
+        return ImageFont.load_default()  # type: ignore
+
+
+def load_font(font_path: str, size: int) -> ImageFont.FreeTypeFont:
+    return _load_font(str(Path(font_path).resolve()), size)
+
 
 six_bgi: Image.Image = Image.open(gacha_path / "back_six.png")
 five_bgi: Image.Image = Image.open(gacha_path / "back_five.png")

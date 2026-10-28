@@ -5,7 +5,7 @@ from typing import List, Optional
 
 import httpx
 from httpx._types import ProxyTypes
-from PIL import ImageDraw, ImageFont
+from PIL import ImageDraw
 
 from ..images import *
 from .model import Operator
@@ -13,7 +13,7 @@ from ..update.main import fetch_info, fetch_image
 
 resource_path = Path(__file__).parent.parent / "resource"
 
-font_base = ImageFont.truetype(str((resource_path / "HarmonyOS_Sans_SC_Medium.ttf").absolute()), 32)
+font_base = load_font(str((resource_path / "HarmonyOS_Sans_SC_Medium.ttf").absolute()), 24)
 
 
 async def simulate_image(ops: List[Operator], proxy: Optional[ProxyTypes] = None):
@@ -68,7 +68,7 @@ async def simulate_image(ops: List[Operator], proxy: Optional[ProxyTypes] = None
                     Path(__file__).parent.parent / "resource" / "gacha" / "半身像_无_1.png"
                 ).resize((offset, 360), Image.Resampling.LANCZOS)
                 _draw = ImageDraw.Draw(avatar)
-                _draw.text((46, 100), "\n".join(name), fill="white", font=font_base)
+                _draw.text((50, 150), "\n".join(name), fill="white", font=font_base)
             s_size = stars[rarity].size
             star = stars[rarity].resize((int(s_size[0] * 0.6), int(47 * 0.6)), Image.Resampling.LANCZOS)
             s_offset = (offset - int(star.size[0])) // 2

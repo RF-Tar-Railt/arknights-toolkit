@@ -6,6 +6,8 @@ from typing import Any, Dict, List, Tuple, Optional
 
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
+from .images import load_font
+
 # --- 资源路径和数据加载 ---
 dir_ = Path(__file__).parent / "resource"
 copper_dir = dir_ / "copper"
@@ -16,22 +18,14 @@ with (copper_dir / "copper_table.json").open("r", encoding="utf-8") as f:
 # --- 字体和图片资源预加载 ---
 
 
-def load_font_safe(font_path: str, size: int):
-    """安全加载字体，失败则返回默认字体"""
-    try:
-        return ImageFont.truetype(font_path, size)
-    except IOError:
-        return ImageFont.load_default()
-
-
 def _preload_images() -> Dict[str, Any]:
     """预加载所有静态图片资源以提高性能"""
     assets = {}
     font_path = str(dir_ / "HarmonyOS_Sans_SC_Medium.ttf")
     assets["fonts"] = {
-        "title": load_font_safe(font_path, 24),
-        "desc": load_font_safe(font_path, 18),
-        "notes": load_font_safe(font_path, 18),
+        "title": load_font(font_path, 24),
+        "desc": load_font(font_path, 18),
+        "notes": load_font(font_path, 18),
     }
 
     # 通用和详情页资源
